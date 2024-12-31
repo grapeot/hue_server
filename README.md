@@ -108,6 +108,7 @@ hue_server/
 ├── test_integration.py  # 集成测试
 ├── requirements.txt     # 项目依赖
 ├── .env.example        # 环境变量模板
+├── LICENSE             # MIT许可证
 └── README.md           # 项目文档
 ```
 
