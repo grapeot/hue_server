@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 from phue import Bridge
 import logging
 import uvicorn
+import traceback
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # 加载环境变量
@@ -19,7 +20,7 @@ app = FastAPI(title="Hue Control API")
 
 # 全局变量存储Bridge实例
 bridge = None
-light_name = os.getenv("HUE_LIGHT_NAME")
+light_name = os.getenv("HUE_LIGHT_NAME", "Test Light")
 
 class LightState(BaseModel):
     on: bool
@@ -43,7 +44,7 @@ async def turn_off_light_after_delay(light_name: str, minutes: float):
             else:
                 logger.error(f"Light {light_name} not found")
     except Exception as e:
-        logger.error(f"Error turning off light: {str(e)}")
+        logger.error(f"Error turning off light: {str(e)}\n{traceback.format_exc()}")
 
 @app.on_event("startup")
 async def startup_event():
@@ -60,7 +61,26 @@ async def startup_event():
         bridge.connect()
         logger.info("Successfully connected to Hue Bridge")
     except Exception as e:
-        logger.error(f"Error connecting to Hue Bridge: {str(e)}")
+        logger.error(f"Error connecting to Hue Bridge: {str(e)}\n{traceback.format_exc()}")
+
+def get_light_id(light_name: str) -> int:
+    """获取灯的ID，如果找不到返回None"""
+    if not bridge:
+        logger.debug("Bridge is not connected")
+        return None
+    try:
+        logger.debug(f"Looking for light with name: {light_name}")
+        logger.debug(f"Available lights: {bridge.lights}")
+        for l in bridge.lights:
+            logger.debug(f"Checking light: {l}, name: {getattr(l, 'name', None)}, id: {getattr(l, 'light_id', None)}")
+            if getattr(l, 'name', None) == light_name:
+                light_id = getattr(l, 'light_id', None)
+                logger.debug(f"Found light with ID: {light_id}")
+                return light_id
+        logger.debug("Light not found")
+    except Exception as e:
+        logger.error(f"Error getting light ID: {str(e)}\n{traceback.format_exc()}")
+    return None
 
 @app.get("/light/{minutes}")
 async def control_light(minutes: float):
@@ -76,13 +96,8 @@ async def control_light(minutes: float):
     
     try:
         # 获取灯的ID
-        light_id = None
-        for l in bridge.lights:
-            if l.name == light_name:
-                light_id = l.light_id
-                break
-        
-        if not light_id:
+        light_id = get_light_id(light_name)
+        if light_id is None:
             raise HTTPException(status_code=404, detail=f"Light {light_name} not found")
         
         if minutes == 0:
@@ -108,8 +123,10 @@ async def control_light(minutes: float):
                 "light_name": light_name,
                 "turn_on_time": datetime.now().isoformat()
             }
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error controlling light: {str(e)}")
+        logger.error(f"Error controlling light: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/status")
@@ -119,13 +136,8 @@ async def get_status():
         raise HTTPException(status_code=503, detail="Bridge not connected")
     
     try:
-        light_id = None
-        for l in bridge.lights:
-            if l.name == light_name:
-                light_id = l.light_id
-                break
-        
-        if not light_id:
+        light_id = get_light_id(light_name)
+        if light_id is None:
             raise HTTPException(status_code=404, detail=f"Light {light_name} not found")
         
         light = bridge.get_light(light_id)
@@ -133,8 +145,10 @@ async def get_status():
             "name": light_name,
             "state": light["state"]
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error getting light status: {str(e)}")
+        logger.error(f"Error getting light status: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/state")
@@ -144,13 +158,8 @@ async def set_state(state: LightState):
         raise HTTPException(status_code=503, detail="Bridge not connected")
     
     try:
-        light_id = None
-        for l in bridge.lights:
-            if l.name == light_name:
-                light_id = l.light_id
-                break
-        
-        if not light_id:
+        light_id = get_light_id(light_name)
+        if light_id is None:
             raise HTTPException(status_code=404, detail=f"Light {light_name} not found")
         
         # 设置灯的状态
@@ -168,8 +177,10 @@ async def set_state(state: LightState):
                 "bri": state.bri
             }
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error setting light state: {str(e)}")
+        logger.error(f"Error setting light state: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 def main():
