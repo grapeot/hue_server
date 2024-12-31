@@ -1,13 +1,19 @@
 import requests
 import time
 import logging
+import os
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-BASE_URL = "http://localhost:8000"
+PORT = int(os.getenv("PORT", "8000"))
+BASE_URL = f"http://localhost:{PORT}"
 
 def save_light_state() -> Dict[str, Any]:
     """保存当前灯的状态"""

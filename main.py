@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 from phue import Bridge
 import logging
+import uvicorn
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -169,4 +170,12 @@ async def set_state(state: LightState):
         }
     except Exception as e:
         logger.error(f"Error setting light state: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+def main():
+    """主函数，启动FastAPI服务器"""
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
+if __name__ == "__main__":
+    main() 
