@@ -30,13 +30,17 @@ logger = logging.getLogger(__name__)
 PORT = int(os.getenv("PORT", "8000"))
 BASE_URL = f"http://localhost:{PORT}"
 
-# 默认跳过测试，除非设置环境变量 RUN_WEMO_TESTS=true
-SKIP_TESTS = os.getenv("RUN_WEMO_TESTS", "false").lower() != "true"
 
-
-@unittest.skipIf(SKIP_TESTS, "Wemo integration tests skipped by default. Set RUN_WEMO_TESTS=true to run.")
 class TestWemoIntegration(unittest.TestCase):
     """Wemo设备集成测试"""
+    
+    @classmethod
+    def setUpClass(cls):
+        """检查是否应该运行测试"""
+        skip_tests = os.getenv("RUN_WEMO_TESTS", "false").lower() != "true"
+        if skip_tests and __name__ != "__main__":
+            # 如果不是直接运行，默认跳过
+            raise unittest.SkipTest("Wemo integration tests skipped by default. Set RUN_WEMO_TESTS=true to run.")
     
     def setUp(self):
         """测试前的设置"""
@@ -108,8 +112,7 @@ class TestWemoIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     # 如果直接运行此脚本，自动启用测试
-    if len(sys.argv) > 1 and sys.argv[1] == "--run":
-        os.environ["RUN_WEMO_TESTS"] = "true"
-        logger.info("手动运行模式：启用Wemo集成测试")
+    os.environ["RUN_WEMO_TESTS"] = "true"
+    logger.info("手动运行模式：启用Wemo集成测试")
     
     unittest.main()
