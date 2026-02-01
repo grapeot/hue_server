@@ -229,7 +229,7 @@ async def control_light(minutes: float):
         else:
             # 打开灯并设置延时关闭
             bridge.set_light(light_id, 'on', True)
-            bridge.set_light(light_id, 'bri', 254)  # 设置亮度为最大
+            bridge.set_light(light_id, 'bri', 10)  # 设置亮度为最低（避免太亮）
             
             # 启动异步任务在指定时间后关闭灯
             asyncio.create_task(turn_off_light_after_delay(light_name, minutes))

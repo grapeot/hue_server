@@ -85,7 +85,7 @@ class TestHueAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         # 验证灯被打开
         self.mock_bridge.set_light.assert_any_call(1, 'on', True)
-        self.mock_bridge.set_light.assert_any_call(1, 'bri', 254)
+        self.mock_bridge.set_light.assert_any_call(1, 'bri', 10)  # 应该设置为最低亮度
 
     def test_set_state(self):
         """测试设置状态功能"""
