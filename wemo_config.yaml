@@ -46,9 +46,3 @@ schedule:
       device: "Coffee"
       action: "off"
       description: "中午关闭咖啡机"
-    
-    # 示例：使用秒级精度（可选）
-    # - time: "22:30:00"
-    #   device: "Bedroom Light"
-    #   action: "off"
-    #   description: "晚上关闭卧室灯"
