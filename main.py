@@ -29,12 +29,15 @@ light_name = os.getenv("HUE_LIGHT_NAME", "Test Light")
 wemo_devices: Dict[str, pywemo.WeMoDevice] = {}
 wemo_schedule_manager: Optional[WemoScheduleManager] = None
 
+# 全局timer任务（用于延时关灯）
+light_timer_task: Optional[asyncio.Task] = None
+
 class LightState(BaseModel):
     on: bool
     bri: int = 254  # 默认最大亮度
 
 async def turn_off_light_after_delay(light_name: str, minutes: float):
-    """在指定分钟数后关闭灯"""
+    """在指定分钟数后关闭灯（可被取消）"""
     try:
         await asyncio.sleep(minutes * 60)  # 转换为秒
         if bridge:
@@ -50,6 +53,9 @@ async def turn_off_light_after_delay(light_name: str, minutes: float):
                 logger.info(f"Light {light_name} turned off after {minutes} minutes")
             else:
                 logger.error(f"Light {light_name} not found")
+    except asyncio.CancelledError:
+        logger.info(f"Timer for {light_name} was cancelled")
+        raise
     except Exception as e:
         logger.error(f"Error turning off light: {str(e)}\n{traceback.format_exc()}")
 
@@ -204,7 +210,10 @@ async def control_light(minutes: float):
     """
     打开灯并在指定分钟数后关闭
     如果minutes为0，则立即关闭
+    如果已有timer在运行，会重置timer（取消旧的，创建新的）
     """
+    global light_timer_task
+    
     if not bridge:
         raise HTTPException(status_code=503, detail="Bridge not connected")
     
@@ -218,8 +227,14 @@ async def control_light(minutes: float):
             raise HTTPException(status_code=404, detail=f"Light {light_name} not found")
         
         if minutes == 0:
-            # 立即关闭
+            # 立即关闭，并取消任何正在运行的timer
+            if light_timer_task and not light_timer_task.done():
+                light_timer_task.cancel()
+                logger.info("Cancelled existing timer before immediate turn off")
+            
             bridge.set_light(light_id, 'on', False)
+            light_timer_task = None
+            
             return {
                 "status": "success",
                 "message": "Light turned off immediately",
@@ -227,23 +242,73 @@ async def control_light(minutes: float):
                 "turn_off_time": datetime.now().isoformat()
             }
         else:
+            # 如果已有timer在运行，先取消它
+            if light_timer_task and not light_timer_task.done():
+                light_timer_task.cancel()
+                logger.info(f"Reset timer: cancelled existing timer, creating new {minutes}-minute timer")
+            else:
+                logger.info(f"Creating new {minutes}-minute timer")
+            
             # 打开灯并设置延时关闭
             bridge.set_light(light_id, 'on', True)
             bridge.set_light(light_id, 'bri', 10)  # 设置亮度为最低（避免太亮）
             
-            # 启动异步任务在指定时间后关闭灯
-            asyncio.create_task(turn_off_light_after_delay(light_name, minutes))
+            # 创建新的异步任务并保存
+            light_timer_task = asyncio.create_task(turn_off_light_after_delay(light_name, minutes))
             
             return {
                 "status": "success",
                 "message": f"Light turned on and will turn off in {minutes} minutes",
                 "light_name": light_name,
-                "turn_on_time": datetime.now().isoformat()
+                "turn_on_time": datetime.now().isoformat(),
+                "timer_reset": light_timer_task is not None
             }
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error controlling light: {str(e)}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/light/cancel")
+async def cancel_timer():
+    """
+    取消当前的延时关灯timer
+    如果灯是开启的，不会关闭灯，只是取消timer
+    """
+    global light_timer_task
+    
+    if not bridge:
+        raise HTTPException(status_code=503, detail="Bridge not connected")
+    
+    try:
+        if light_timer_task and not light_timer_task.done():
+            light_timer_task.cancel()
+            logger.info("Timer cancelled by user request")
+            
+            # 等待任务取消完成（避免警告）
+            try:
+                await light_timer_task
+            except asyncio.CancelledError:
+                pass
+            
+            light_timer_task = None
+            
+            return {
+                "status": "success",
+                "message": "Timer cancelled successfully",
+                "light_name": light_name,
+                "cancelled_at": datetime.now().isoformat()
+            }
+        else:
+            return {
+                "status": "success",
+                "message": "No active timer to cancel",
+                "light_name": light_name
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cancelling timer: {str(e)}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/status")
