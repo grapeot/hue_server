@@ -2,8 +2,15 @@ import requests
 import time
 import logging
 import os
+import sys
+from pathlib import Path
 from typing import Dict, Any
 from dotenv import load_dotenv
+
+# 添加项目根目录到路径（如果需要）
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 # 加载环境变量
 load_dotenv()

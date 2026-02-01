@@ -80,7 +80,7 @@ schedule:
   tasks:
     # Pacific时间每天早上7:45开启coffee switch
     - time: "07:45"
-      device: "Coffee"  # 可以使用设备名称或别名
+      device: "Coffee"  # 必须与devices中的name字段完全匹配（不区分大小写）
       action: "on"
       description: "早上开启咖啡机"  # 可选：任务描述
     
@@ -90,10 +90,11 @@ schedule:
       action: "off"
       description: "中午关闭咖啡机"
     
-    # 示例：使用秒级精度
-    - time: "22:30:00"
-      device: "Bedroom Light"
-      action: "off"
+    # 示例：使用秒级精度（可选）
+    # - time: "22:30:00"
+    #   device: "Bedroom Light"
+    #   action: "off"
+    #   description: "晚上关闭卧室灯"
 ```
 
 **配置说明**：
@@ -103,18 +104,6 @@ schedule:
 - **设备名称匹配**：API调用时使用精确匹配（case-insensitive），设备名称必须与配置中的`name`字段完全一致
 
 ## 脚本工具
-
-### demo_wemo.py - Wemo设备演示脚本
-
-位于`scripts/demo_wemo.py`，用于演示Wemo设备的基本控制功能：
-
-```bash
-python scripts/demo_wemo.py
-```
-
-该脚本会：
-1. 搜索并列出局域网内所有Wemo设备
-2. 测试控制设备（开启，等待5秒，关闭）
 
 ### refresh_wemo_devices.py - 刷新设备配置
 

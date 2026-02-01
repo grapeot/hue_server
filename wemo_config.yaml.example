@@ -1,0 +1,54 @@
+# Wemo设备配置文件示例
+# 复制此文件为 wemo_config.yaml 并根据实际情况修改
+
+# Wemo设备配置
+# 设备信息hardcode，因为设备固定不变，无需频繁发现
+devices:
+  - name: "Coffee"
+    host: "192.168.180.135"
+    port: 49153
+    type: "Switch"
+    description: "咖啡机开关"  # 可选：设备描述
+  
+  - name: "Bedroom Light"
+    host: "192.168.180.57"
+    port: 49153
+    type: "LightSwitchLongPress"
+    description: "卧室灯光"
+  
+  - name: "Tree"
+    host: "192.168.180.175"
+    port: 49153
+    type: "Insight"
+    description: "圣诞树灯光"
+  
+  - name: "Veggie"
+    host: "192.168.180.68"
+    port: 49153
+    type: "Insight"
+    description: "蔬菜灯"
+
+# 定时任务配置
+schedule:
+  # 全局时区设置（Pacific, UTC, 或 local）
+  timezone: "Pacific"
+  
+  # 定时任务列表
+  tasks:
+    # Pacific时间每天早上7:45开启coffee switch
+    - time: "07:45"
+      device: "Coffee"  # 必须与devices中的name字段完全匹配（不区分大小写）
+      action: "on"
+      description: "早上开启咖啡机"  # 可选：任务描述
+    
+    # Pacific时间每天中午11:00关闭coffee switch
+    - time: "11:00"
+      device: "Coffee"
+      action: "off"
+      description: "中午关闭咖啡机"
+    
+    # 示例：使用秒级精度（可选）
+    # - time: "22:30:00"
+    #   device: "Bedroom Light"
+    #   action: "off"
+    #   description: "晚上关闭卧室灯"
