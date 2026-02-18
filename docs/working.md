@@ -26,6 +26,7 @@
 - **集成测试**: 添加 test/test_integration_real.py，默认跳过
 - **PM2 部署**: 添加 ecosystem.config.js，端口 7999
 - **生产静态文件**: main.py 自动 serve frontend/dist
+- **Rinnai 缓存修复**: 每次获取状态重新登录以获取最新数据
 
 ---
 
@@ -51,6 +52,10 @@
 ### FastAPI 静态文件 SPA
 - **问题**: React Router 需要 SPA fallback 到 index.html
 - **解决**: 在 main.py 中添加 catch-all 路由，优先检查静态文件，否则返回 index.html
+
+### Rinnai API 缓存问题
+- **问题**: aiorinnai 库可能缓存 API 连接，导致状态数据不更新
+- **解决**: 每次获取状态时重新登录创建新 API session
 
 ---
 

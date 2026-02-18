@@ -49,11 +49,21 @@ class RinnaiService:
             await self.api.close()
     
     async def get_status(self) -> dict:
-        if not self.api or not self.device_id:
+        if not self.device_id:
             return {"error": "Not connected", "is_online": False}
         
         try:
-            info = await self.api.device.get_info(self.device_id)
+            # 每次获取状态时重新登录以获取最新数据
+            username = os.getenv("RINNAI_USERNAME")
+            password = os.getenv("RINNAI_PASSWORD")
+            
+            from aiorinnai import API
+            api = API()
+            await api.async_login(username, password)
+            
+            info = await api.device.get_info(self.device_id)
+            await api.close()
+            
             data = info.get("data", {}).get("getDevice", {})
             shadow = data.get("shadow", {})
             sensor = data.get("info", {})
