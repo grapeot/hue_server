@@ -8,36 +8,40 @@ type Tab = 'control' | 'schedule' | 'history';
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('control');
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'control', label: 'Control' },
-    { key: 'schedule', label: 'Schedule' },
-    { key: 'history', label: 'History' },
+  const tabs: { key: Tab; label: string; icon: string }[] = [
+    { key: 'control', label: '设备控制', icon: '🎛️' },
+    { key: 'schedule', label: '定时任务', icon: '⏰' },
+    { key: 'history', label: '历史数据', icon: '📊' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-800">🏠 Smart Home Dashboard</h1>
+      <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <h1 className="text-lg font-bold text-gray-800 flex items-center">
+            <span className="text-2xl mr-2">🏠</span>
+            智能家居控制面板
+          </h1>
         </div>
       </header>
 
       {/* Tab Navigation */}
-      <nav className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex space-x-4">
+      <nav className="bg-white/60 backdrop-blur-sm border-b border-gray-100 sticky top-[57px] z-10">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="flex">
             {tabs.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+                className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-all duration-200 flex items-center justify-center gap-1.5 ${
                   activeTab === tab.key
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50/50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
                 }`}
               >
-                {tab.label}
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -45,11 +49,16 @@ function App() {
       </nav>
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-4 py-4">
         {activeTab === 'control' && <ControlTab />}
         {activeTab === 'schedule' && <ScheduleTab />}
         {activeTab === 'history' && <HistoryTab />}
       </main>
+
+      {/* Footer */}
+      <footer className="max-w-2xl mx-auto px-4 py-6 text-center text-xs text-gray-400">
+        智能家居系统 v2.0
+      </footer>
     </div>
   );
 }

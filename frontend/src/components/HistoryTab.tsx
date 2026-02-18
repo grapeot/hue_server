@@ -6,12 +6,24 @@ interface HistoryRecord {
   device_type: string;
   device_name: string;
   timestamp: string;
-  data: string;
+  data: string | Record<string, unknown>;
+}
+
+function parseData(data: string | Record<string, unknown>): Record<string, unknown> {
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch {
+      return {};
+    }
+  }
+  return data;
 }
 
 export function HistoryTab() {
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchHistory();
@@ -23,16 +35,23 @@ export function HistoryTab() {
       if (res.ok) {
         const data = await res.json();
         setHistory(data);
+      } else {
+        setError('获取历史数据失败');
       }
-    } catch (error) {
-      console.error('Failed to fetch history:', error);
+    } catch (err) {
+      console.error('Failed to fetch history:', err);
+      setError('获取历史数据失败');
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return <div className="p-4">Loading...</div>;
+    return <div className="p-4 text-gray-500">加载中...</div>;
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-500">{error}</div>;
   }
 
   if (history.length === 0) {
@@ -46,10 +65,10 @@ export function HistoryTab() {
   const hueHistory = history
     .filter(h => h.device_type === 'hue')
     .map(h => {
-      const data = JSON.parse(h.data);
+      const data = parseData(h.data);
       return {
-        timestamp: new Date(h.timestamp).toLocaleTimeString(),
-        brightness: data.brightness || 0,
+        timestamp: new Date(h.timestamp).toLocaleTimeString('zh-CN'),
+        brightness: (data.brightness as number) || 0,
         is_on: data.is_on ? 1 : 0,
       };
     })
@@ -62,9 +81,9 @@ export function HistoryTab() {
       if (!wemoHistory[h.device_name]) {
         wemoHistory[h.device_name] = [];
       }
-      const data = JSON.parse(h.data);
+      const data = parseData(h.data);
       wemoHistory[h.device_name].push({
-        timestamp: new Date(h.timestamp).toLocaleTimeString(),
+        timestamp: new Date(h.timestamp).toLocaleTimeString('zh-CN'),
         on_minutes: data.is_on ? 30 : 0,
       });
     });
@@ -76,12 +95,12 @@ export function HistoryTab() {
   const rinnaiHistory = history
     .filter(h => h.device_type === 'rinnai')
     .map(h => {
-      const data = JSON.parse(h.data);
+      const data = parseData(h.data);
       return {
-        timestamp: new Date(h.timestamp).toLocaleTimeString(),
-        inlet_temp: data.inlet_temp || 0,
-        outlet_temp: data.outlet_temp || 0,
-        set_temp: data.set_temperature || 0,
+        timestamp: new Date(h.timestamp).toLocaleTimeString('zh-CN'),
+        inlet_temp: (data.inlet_temp as number) || 0,
+        outlet_temp: (data.outlet_temp as number) || 0,
+        set_temp: (data.set_temperature as number) || 0,
       };
     })
     .reverse();
@@ -92,16 +111,18 @@ export function HistoryTab() {
   });
 
   const wemoTotalData = Object.entries(wemoTotalOn).map(([name, minutes]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
+    name: name === 'coffee' ? '咖啡机' :
+           name === 'veggie' ? '蔬菜灯' :
+           name === 'tree' ? '圣诞树' :
+           name === 'bedroom light' ? '卧室灯' : name,
     hours: Math.round((minutes / 60) * 10) / 10,
   }));
 
   return (
     <div className="space-y-6">
-      {/* Hue Brightness */}
       {hueHistory.length > 0 && (
         <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold mb-3">💡 Baby Room 亮度 (24小时)</h2>
+          <h2 className="text-lg font-semibold mb-3">💡 卧室灯亮度（24小时）</h2>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={hueHistory}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -114,10 +135,9 @@ export function HistoryTab() {
         </div>
       )}
 
-      {/* Wemo Summary */}
       {wemoTotalData.length > 0 && (
         <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold mb-3">🔌 开关开启时长 (24小时)</h2>
+          <h2 className="text-lg font-semibold mb-3">🔌 开关开启时长（24小时）</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={wemoTotalData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -130,10 +150,9 @@ export function HistoryTab() {
         </div>
       )}
 
-      {/* Rinnai Temperature */}
       {rinnaiHistory.length > 0 && (
         <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold mb-3">🚿 热水器温度 (24小时)</h2>
+          <h2 className="text-lg font-semibold mb-3">🚿 热水器温度（24小时）</h2>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={rinnaiHistory}>
               <CartesianGrid strokeDasharray="3 3" />

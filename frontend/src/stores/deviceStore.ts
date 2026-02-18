@@ -56,6 +56,7 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
       const res = await fetch(`${API_BASE}/rinnai/circulate?duration=${duration}`);
       if (!res.ok) throw new Error('Failed to start circulation');
       await get().fetchStatus();
+      setTimeout(() => get().fetchStatus(), 10000);
     } catch (error) {
       set({ error: String(error) });
     }
