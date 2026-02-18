@@ -1,12 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ControlTab } from './components/ControlTab';
 import { ScheduleTab } from './components/ScheduleTab';
 import { HistoryTab } from './components/HistoryTab';
 
 type Tab = 'control' | 'schedule' | 'history';
 
+const TAB_PATH: Record<Tab, string> = {
+  control: '/control',
+  schedule: '/schedule',
+  history: '/history',
+};
+
+function getTabFromPath(pathname: string): Tab {
+  const normalizedPath = pathname.endsWith('/') && pathname !== '/'
+    ? pathname.slice(0, -1)
+    : pathname;
+
+  if (normalizedPath === '/schedule') {
+    return 'schedule';
+  }
+
+  if (normalizedPath === '/history') {
+    return 'history';
+  }
+
+  return 'control';
+}
+
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('control');
+  const [activeTab, setActiveTab] = useState<Tab>(() => getTabFromPath(window.location.pathname));
+
+  useEffect(() => {
+    const onPopState = () => {
+      setActiveTab(getTabFromPath(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  const switchTab = (tab: Tab) => {
+    if (tab === activeTab) {
+      return;
+    }
+
+    window.history.pushState({ tab }, '', TAB_PATH[tab]);
+    setActiveTab(tab);
+  };
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/' || path === '') {
+      window.history.replaceState({ tab: 'control' }, '', TAB_PATH.control);
+    }
+  }, []);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'control', label: '设备控制', icon: '🎛️' },
@@ -33,7 +80,7 @@ function App() {
             {tabs.map(tab => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => switchTab(tab.key)}
                 className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-all duration-200 flex items-center justify-center gap-1.5 ${
                   activeTab === tab.key
                     ? 'border-blue-500 text-blue-600 bg-blue-50/50'

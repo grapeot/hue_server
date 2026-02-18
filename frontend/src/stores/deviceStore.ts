@@ -9,6 +9,7 @@ interface DeviceStore {
   toggleHue: () => Promise<void>;
   toggleWemo: (name: string) => Promise<void>;
   circulateRinnai: (duration?: number) => Promise<void>;
+  refreshRinnai: () => Promise<void>;
   toggleGarage: (doorIndex: number) => Promise<void>;
 }
 
@@ -55,10 +56,27 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
     try {
       const res = await fetch(`${API_BASE}/rinnai/circulate?duration=${duration}`);
       if (!res.ok) throw new Error('Failed to start circulation');
-      await get().fetchStatus();
+      await get().refreshRinnai();
       setTimeout(() => get().fetchStatus(), 10000);
     } catch (error) {
       set({ error: String(error) });
+    }
+  },
+
+  refreshRinnai: async () => {
+    set({ error: null });
+    try {
+      // Single request: trigger maintenance + fetch all status (waits ~5s for device to report)
+      const res = await fetch(`${API_BASE}/status?rinnai_refresh=true`);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `维护刷新失败 (${res.status})`);
+      }
+      const data = await res.json();
+      set({ status: data });
+      setTimeout(() => get().fetchStatus(), 10000);
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : String(error) });
     }
   },
 

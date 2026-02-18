@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDeviceStore } from '../stores/deviceStore';
 
 export function ControlTab() {
-  const { status, loading, error, fetchStatus, toggleHue, toggleWemo, circulateRinnai, toggleGarage } = useDeviceStore();
+  const { status, loading, error, fetchStatus, toggleHue, toggleWemo, circulateRinnai, refreshRinnai, toggleGarage } = useDeviceStore();
 
   useEffect(() => {
     fetchStatus();
@@ -18,7 +18,7 @@ export function ControlTab() {
     );
   }
 
-  if (error) {
+  if (error && !status) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         加载失败: {error}
@@ -36,6 +36,12 @@ export function ControlTab() {
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-700 text-sm">
+          操作提示: {error}
+        </div>
+      )}
+
       {/* 灯光 */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-gray-100">
@@ -147,12 +153,20 @@ export function ControlTab() {
               </div>
             </div>
           </div>
-          <button
-            onClick={() => circulateRinnai(5)}
-            className="w-full mt-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            触发 5 分钟循环
-          </button>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <button
+              onClick={() => circulateRinnai(5)}
+              className="px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              触发 5 分钟循环
+            </button>
+            <button
+              onClick={refreshRinnai}
+              className="px-4 py-2.5 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+            >
+              维护刷新
+            </button>
+          </div>
         </div>
       </section>
 

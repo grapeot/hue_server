@@ -26,7 +26,9 @@
 - **集成测试**: 添加 test/test_integration_real.py，默认跳过
 - **PM2 部署**: 添加 ecosystem.config.js，端口 7999
 - **生产静态文件**: main.py 自动 serve frontend/dist
-- **Rinnai 缓存修复**: 每次获取状态重新登录以获取最新数据
+- **Rinnai 刷新改造**: 改为复用会话并增加维护刷新接口 `/api/rinnai/maintenance`
+- **Rinnai 维护刷新修复**: 刷新改为单请求 `GET /api/status?rinnai_refresh=true`，避免 maintenance + status 双请求导致的错误；修复 popstate 监听（useState→useEffect）
+- **Tab URL 路由**: 每个 tab 独立 URL：`/control`、`/schedule`、`/history`，刷新不丢失当前 tab；根路径 `/` 自动替换为 `/control`
 
 ---
 
@@ -55,7 +57,7 @@
 
 ### Rinnai API 缓存问题
 - **问题**: aiorinnai 库可能缓存 API 连接，导致状态数据不更新
-- **解决**: 每次获取状态时重新登录创建新 API session
+- **现状**: 保持连接 + 失败后重连；通过触发 `/api/rinnai/maintenance` 做“维护读取”后再拉取最新状态
 
 ---
 
@@ -71,6 +73,8 @@
 - [x] PM2 部署脚本
 - [x] 生产环境静态文件 serve
 - [x] 集成测试 (skip by default)
+- [x] Tab URL 路由 (/control, /schedule, /history)
+- [x] Rinnai 维护刷新单请求改造
 - [ ] 实际部署到服务器
 
 ---

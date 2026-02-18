@@ -18,12 +18,11 @@ class TestHealthEndpoint:
 
 class TestRootEndpoint:
     
-    def test_root(self):
+    def test_root_serves_spa(self):
         response = client.get("/")
         assert response.status_code == 200
-        data = response.json()
-        assert data["name"] == "Smart Home Dashboard"
-        assert "endpoints" in data
+        assert "text/html" in response.headers.get("content-type", "")
+        assert "<!doctype html>" in response.text.lower() or "<html" in response.text.lower()
 
 
 class TestHueEndpoints:
@@ -81,3 +80,46 @@ class TestWemoEndpoints:
         
         response = client.get("/api/wemo/coffee/toggle")
         assert response.status_code == 200
+
+
+class TestRinnaiEndpoints:
+
+    @patch('api.rinnai.rinnai_service.get_status', new_callable=AsyncMock)
+    def test_get_rinnai_status(self, mock_get_status):
+        mock_get_status.return_value = {
+            "device_id": "test-device",
+            "is_online": True,
+            "set_temperature": 120
+        }
+
+        response = client.get("/api/rinnai/status")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_online"] is True
+        assert data["set_temperature"] == 120
+
+    @patch('api.rinnai.rinnai_service.trigger_maintenance_retrieval', new_callable=AsyncMock)
+    def test_get_rinnai_maintenance(self, mock_maintenance):
+        mock_maintenance.return_value = {"status": "success", "is_online": True}
+
+        response = client.get("/api/rinnai/maintenance")
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
+
+
+class TestStatusEndpoint:
+
+    @patch('api.status.rinnai_service.get_status', new_callable=AsyncMock)
+    def test_get_status_with_rinnai_refresh(self, mock_rinnai_status):
+        mock_rinnai_status.return_value = {
+            "device_id": "test",
+            "is_online": True,
+            "set_temperature": 125,
+        }
+
+        response = client.get("/api/status?rinnai_refresh=true")
+        assert response.status_code == 200
+        data = response.json()
+        assert "rinnai" in data
+        assert data["rinnai"]["is_online"] is True
+        mock_rinnai_status.assert_called_once_with(trigger_maintenance=True)
