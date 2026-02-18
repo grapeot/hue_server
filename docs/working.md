@@ -13,6 +13,7 @@
 - **数据库**: 创建 models/database.py，SQLite 历史数据存储
 - **定时任务**: 创建 services/scheduler.py，每30分钟采集状态 + Hue 定时开关
 - **main.py 重构**: 整合所有服务层和 API 路由，添加 CORS 和健康检查
+- **测试覆盖**: 添加 test/test_hue_service.py, test/test_api.py, test/test_database.py
 
 ---
 
@@ -35,7 +36,7 @@
 
 ## TODO
 
-- [ ] 完善 test coverage (api/services)
+- [x] 完善 test coverage (api/services)
 - [ ] 初始化 React + Vite 前端
 - [ ] 实现 Control Tab
 - [ ] 实现 Schedule Tab
