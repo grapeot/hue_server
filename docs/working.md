@@ -14,6 +14,11 @@
 - **定时任务**: 创建 services/scheduler.py，每30分钟采集状态 + Hue 定时开关
 - **main.py 重构**: 整合所有服务层和 API 路由，添加 CORS 和健康检查
 - **测试覆盖**: 添加 test/test_hue_service.py, test/test_api.py, test/test_database.py
+- **React 前端**: 初始化 Vite + React + TypeScript + TailwindCSS
+- **Control Tab**: 设备状态显示和控制按钮
+- **Schedule Tab**: Hue/Wemo/Rinnai 定时任务展示
+- **History Tab**: Recharts 图表可视化 (亮度/开关/温度)
+- **Vite Proxy**: 配置开发时代理到后端 8001 端口
 
 ---
 
@@ -32,13 +37,17 @@
 - **问题**: 默认使用 UTC 时区
 - **解决**: 显式设置 `timezone=pytz.timezone('America/Los_Angeles')`
 
+### TypeScript type-only import
+- **问题**: `error TS1484: 'DeviceStatus' is a type and must be imported using a type-only import`
+- **解决**: 使用 `import type { DeviceStatus }` 替代 `import { DeviceStatus }`
+
 ---
 
 ## TODO
 
 - [x] 完善 test coverage (api/services)
-- [ ] 初始化 React + Vite 前端
-- [ ] 实现 Control Tab
-- [ ] 实现 Schedule Tab
-- [ ] 实现 History Tab
+- [x] 初始化 React + Vite 前端
+- [x] 实现 Control Tab
+- [x] 实现 Schedule Tab
+- [x] 实现 History Tab
 - [ ] 集成测试
