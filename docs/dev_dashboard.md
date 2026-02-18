@@ -319,7 +319,68 @@ uvicorn main:app --port 8001
 | `/api/schedules` | GET | 获取所有定时任务 |
 | `/api/history` | GET | 获取历史数据 (支持时间范围) |
 
-### 4.2 响应格式
+### 4.2 iOS Shortcut API（手机快捷控制）
+
+专为 iOS Shortcuts 设计的简洁 API，支持 GET 请求。
+
+| 端点 | 方法 | 描述 |
+|-----|------|------|
+| `/api/hue/off` | GET | 关灯（Baby Room） |
+| `/api/hue/on` | GET | 开灯，亮度 128（Baby Room） |
+| `/api/hue/timer/{minutes}` | GET | 开灯(亮度1) + X分钟后关灯 |
+| `/api/hue/timer/{minutes}?brightness=10` | GET | 开灯(指定亮度) + X分钟后关灯 |
+| `/api/hue/cancel` | GET | 取消当前 Timer |
+| `/api/hue/status` | GET | 获取灯状态 |
+
+**Shortcut 示例配置：**
+
+```
+场景1: 关灯
+GET http://localhost:8001/api/hue/off
+
+场景2: 开灯（亮度128）
+GET http://localhost:8001/api/hue/on
+
+场景3: 开灯（亮度1）+ 7分钟后关灯
+GET http://localhost:8001/api/hue/timer/7
+
+场景3变体: 开灯（亮度10）+ 7分钟后关灯
+GET http://localhost:8001/api/hue/timer/7?brightness=10
+
+取消 Timer:
+GET http://localhost:8001/api/hue/cancel
+```
+
+**Timer 行为：**
+- 如果已有 Timer 在运行，自动取消旧 Timer，重新开始计时
+- 不会叠加多个 Timer
+
+**响应示例：**
+```json
+{
+  "status": "success",
+  "light": "Baby room",
+  "action": "timer",
+  "brightness": 1,
+  "minutes": 7,
+  "turn_off_at": "2026-02-18T12:07:00",
+  "timer_reset": true
+}
+```
+
+### 4.3 Dashboard API（前端使用）
+
+| 端点 | 方法 | 描述 |
+|-----|------|------|
+| `/api/status` | GET | 获取所有设备状态 |
+| `/api/hue/{light}/toggle` | POST | 切换灯状态 |
+| `/api/wemo/{device}/toggle` | POST | 切换开关状态 |
+| `/api/rinnai/circulate` | POST | 启动5分钟循环 |
+| `/api/garage/{door}/toggle` | POST | 触发车库门 |
+| `/api/schedules` | GET | 获取所有定时任务 |
+| `/api/history` | GET | 获取历史数据 (支持时间范围) |
+
+### 4.4 响应格式
 
 **GET /api/status**
 ```json
