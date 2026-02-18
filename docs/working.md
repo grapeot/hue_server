@@ -12,6 +12,7 @@
 - **API 层**: 创建 api/ 目录，拆分路由模块
 - **数据库**: 创建 models/database.py，SQLite 历史数据存储
 - **定时任务**: 创建 services/scheduler.py，每30分钟采集状态 + Hue 定时开关
+- **main.py 重构**: 整合所有服务层和 API 路由，添加 CORS 和健康检查
 
 ---
 
