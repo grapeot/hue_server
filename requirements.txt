@@ -3,8 +3,10 @@ uvicorn==0.24.0
 phue==1.1
 python-dotenv==1.0.0
 requests==2.31.0
-httpx==0.25.2  # 用于FastAPI的TestClient
-pywemo==1.3.1  # Wemo设备控制
-pytz==2024.1  # 时区支持
-pyyaml==6.0.1  # YAML配置文件解析
-APScheduler==3.10.4  # 定时任务调度 
+httpx==0.25.2
+pywemo==1.3.1
+pytz==2024.1
+pyyaml==6.0.1
+APScheduler==3.10.4
+aiorinnai>=0.3.0
+meross-iot>=0.4.10 
