@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import uvicorn
 
-from api import hue, wemo, rinnai, garage, status
+from api import hue, wemo, rinnai, garage, status, history
 from services.hue_service import hue_service
 from services.wemo_service import wemo_service
 from services.rinnai_service import rinnai_service
@@ -38,6 +38,7 @@ app.include_router(wemo.router)
 app.include_router(rinnai.router)
 app.include_router(garage.router)
 app.include_router(status.router)
+app.include_router(history.router)
 
 wemo_schedule_manager = None
 
