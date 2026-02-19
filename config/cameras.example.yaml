@@ -1,0 +1,36 @@
+# 摄像头配置示例
+# 复制此文件为 cameras.yaml 并填入实际 IP
+# 凭证通过 .env 文件配置 (CAMERA_USER, CAMERA_PASSWORD)
+
+cameras:
+  - name: "Upstairs Patio"
+    id: "upstairs_patio"
+    ip: "192.168.180.69"
+  
+  - name: "Frontyard"
+    id: "frontyard"
+    ip: "192.168.180.52"
+  
+  - name: "Outer Patio"
+    id: "outer_patio"
+    ip: "192.168.180.182"
+  
+  - name: "Backyard"
+    id: "backyard"
+    ip: "192.168.180.92"
+  
+  - name: "Heat Pump Side Door"
+    id: "heat_pump_side_door"
+    ip: "192.168.180.147"
+  
+  - name: "Downstairs Side Door"
+    id: "downstairs_side_door"
+    ip: "192.168.180.74"
+  
+  - name: "Driveway"
+    id: "driveway"
+    ip: "192.168.180.85"
+  
+  - name: "Babyroom"
+    id: "babyroom"
+    ip: "192.168.180.100"
