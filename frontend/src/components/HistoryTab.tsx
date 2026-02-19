@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
+const PACIFIC_TZ = 'America/Los_Angeles';
+
+function formatPacificTime(ts: number | string, options?: Intl.DateTimeFormatOptions): string {
+  const date = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+  return date.toLocaleTimeString('en-US', { timeZone: PACIFIC_TZ, ...options });
+}
+
 interface HistoryRecord {
   id: number;
   device_type: string;
@@ -69,7 +76,7 @@ export function HistoryTab() {
       const ts = new Date(h.timestamp).getTime();
       return {
         time: ts,
-        timestamp: new Date(h.timestamp).toLocaleTimeString('zh-CN'),
+        timestamp: formatPacificTime(h.timestamp),
         brightness: (data.brightness as number) || 0,
         is_on: data.is_on ? 1 : 0,
       };
@@ -85,7 +92,7 @@ export function HistoryTab() {
       }
       const data = parseData(h.data);
       wemoHistory[h.device_name].push({
-        timestamp: new Date(h.timestamp).toLocaleTimeString('zh-CN'),
+        timestamp: formatPacificTime(h.timestamp),
         on_minutes: data.is_on ? 30 : 0,
       });
     });
@@ -101,7 +108,7 @@ export function HistoryTab() {
       const ts = new Date(h.timestamp).getTime();
       return {
         time: ts,
-        timestamp: new Date(h.timestamp).toLocaleTimeString('zh-CN'),
+        timestamp: formatPacificTime(h.timestamp),
         inlet_temp: (data.inlet_temp as number) ?? 0,
         outlet_temp: (data.outlet_temp as number) ?? 0,
         set_temp: (data.set_temperature as number) ?? 0,
@@ -134,11 +141,11 @@ export function HistoryTab() {
                 dataKey="time"
                 type="number"
                 domain={['dataMin', 'dataMax']}
-                tickFormatter={(ts) => new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                tickFormatter={(ts) => formatPacificTime(ts, { hour: '2-digit', minute: '2-digit' })}
                 tick={{ fontSize: 10 }}
               />
               <YAxis domain={[0, 254]} />
-              <Tooltip labelFormatter={(ts) => new Date(Number(ts)).toLocaleTimeString('zh-CN')} />
+              <Tooltip labelFormatter={(ts) => formatPacificTime(Number(ts))} />
               <Line type="monotone" dataKey="brightness" stroke="#8884d8" dot={false} />
             </LineChart>
           </ResponsiveContainer>
@@ -170,11 +177,11 @@ export function HistoryTab() {
                 dataKey="time"
                 type="number"
                 domain={['dataMin', 'dataMax']}
-                tickFormatter={(ts) => new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                tickFormatter={(ts) => formatPacificTime(ts, { hour: '2-digit', minute: '2-digit' })}
                 tick={{ fontSize: 10 }}
               />
               <YAxis domain={[0, 150]} />
-              <Tooltip labelFormatter={(ts) => new Date(Number(ts)).toLocaleTimeString('zh-CN')} />
+              <Tooltip labelFormatter={(ts) => formatPacificTime(Number(ts))} />
               <Line type="monotone" dataKey="set_temp" stroke="#8884d8" dot={false} name="设定温度" />
               <Line type="monotone" dataKey="inlet_temp" stroke="#82ca9d" dot={false} name="进水温度" />
               <Line type="monotone" dataKey="outlet_temp" stroke="#ffc658" dot={false} name="出水温度" />

@@ -47,14 +47,14 @@ pip install -r requirements.txt
 ### 运行
 
 ```bash
-# 后端（默认端口 7999）
-python main.py
+# 构建前端（产出到 frontend/dist）
+./scripts/build-frontend.sh
 
-# 前端开发（另开终端）
-cd frontend && npm install && npm run dev
+# 启动后端（开发模式，--reload，端口 7999）
+./scripts/start-backend.sh
 ```
 
-生产模式：`cd frontend && npm run build` 后，`main.py` 会自动 serve 静态文件。
+生产模式：先 `./scripts/build-frontend.sh`，再 `python main.py` 或 PM2 启动，会自动 serve 静态文件。
 
 ### PM2 部署
 
@@ -79,6 +79,8 @@ pm2 save
 
 | 脚本 | 说明 |
 |------|------|
+| `scripts/build-frontend.sh` | 构建前端到 frontend/dist |
+| `scripts/start-backend.sh` | 启动后端（uvicorn --reload，端口 7999） |
 | `scripts/refresh_wemo_devices.py` | 发现 Wemo 设备并更新 config |
 | `scripts/backfill_rinnai_zero_temp.py` | 删除无效 Rinnai 记录（inlet/outlet 为 0 或 NULL） |
 | `scripts/backfill_rinnai_zero_temp.py --dry-run` | 预览将删除的记录 |

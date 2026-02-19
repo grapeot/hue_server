@@ -134,3 +134,23 @@ class TestStatusEndpoint:
         assert "hue" not in data
         assert "rinnai" not in data
         assert "garage" not in data
+
+
+class TestHistoryEndpoint:
+
+    @patch('api.history.get_device_history')
+    def test_history_timestamps_have_utc_suffix(self, mock_get_history):
+        mock_get_history.return_value = [
+            {
+                "id": 1,
+                "device_type": "rinnai",
+                "device_name": "main_house",
+                "timestamp": "2026-02-19 00:47:05",
+                "data": {"inlet_temp": 66, "outlet_temp": 125},
+            },
+        ]
+        response = client.get("/api/history?hours=24")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["timestamp"] == "2026-02-19T00:47:05Z"
