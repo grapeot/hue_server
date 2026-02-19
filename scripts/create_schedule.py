@@ -1,12 +1,16 @@
+#!/usr/bin/env python3
+"""Rinnai 创建 Schedule 脚本 - 直接调用 GraphQL mutation"""
 import asyncio
 import os
 import json
 import uuid
+from pathlib import Path
+
 from dotenv import load_dotenv
 from aiorinnai import API
 from aiorinnai.const import GRAPHQL_ENDPOINT, GET_PAYLOAD_HEADERS
 
-load_dotenv()
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 CREATE_SCHEDULE_MUTATION = """
 mutation CreateDeviceSchedule($input: CreateDeviceScheduleInput!, $condition: ModelDeviceScheduleConditionInput) {
@@ -27,24 +31,24 @@ mutation CreateDeviceSchedule($input: CreateDeviceScheduleInput!, $condition: Mo
 async def main():
     username = os.getenv("RINNAI_USERNAME")
     password = os.getenv("RINNAI_PASSWORD")
-    
+
     async with API() as api:
         await api.async_login(username, password)
         print(f"Connected: {api.is_connected}")
-        
+
         user_info = await api.user.get_info()
         devices = user_info.get("devices", {}).get("items", [])
-        
+
         if not devices:
             print("No devices found")
             return
-        
+
         device = devices[0]
         device_id = device.get("id")
         print(f"Device ID: {device_id}")
-        
+
         schedule_id = str(uuid.uuid4()).upper()
-        
+
         variables = {
             "input": {
                 "id": schedule_id,
@@ -56,17 +60,17 @@ async def main():
                 "active": True,
             }
         }
-        
+
         payload = json.dumps({"query": CREATE_SCHEDULE_MUTATION, "variables": variables})
-        
+
         headers = {
             **GET_PAYLOAD_HEADERS,
             "Authorization": api.id_token,
         }
-        
+
         print(f"\nCreating schedule...")
         print(f"Payload: {json.dumps(variables, indent=2)}")
-        
+
         async with api._get_session().post(
             GRAPHQL_ENDPOINT,
             data=payload,

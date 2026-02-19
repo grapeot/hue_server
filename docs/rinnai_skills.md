@@ -188,5 +188,5 @@ mutation DeleteDeviceSchedule($input: DeleteDeviceScheduleInput!, $condition: Mo
 ## 示例脚本
 
 - `test_api.py` - 读取设备状态
-- `create_schedule.py` - 创建 schedule
-- `introspect_schema.py` - 查询 GraphQL schema
+- `scripts/create_schedule.py` - 创建 schedule
+- `scripts/introspect_schema.py` - 查询 GraphQL schema

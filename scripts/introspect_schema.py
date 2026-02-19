@@ -1,11 +1,15 @@
+#!/usr/bin/env python3
+"""Rinnai GraphQL schema 内省脚本 - 查询可用 mutations"""
 import asyncio
 import os
 import json
+from pathlib import Path
+
 from dotenv import load_dotenv
 from aiorinnai import API
 from aiorinnai.const import GRAPHQL_ENDPOINT, GET_PAYLOAD_HEADERS
 
-load_dotenv()
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 INTROSPECTION_QUERY = """
 {
@@ -31,27 +35,27 @@ INTROSPECTION_QUERY = """
 """
 
 async def main():
-    username = os.getenv("USERNAME")
-    password = os.getenv("PASSWORD")
-    
+    username = os.getenv("RINNAI_USERNAME") or os.getenv("USERNAME")
+    password = os.getenv("RINNAI_PASSWORD") or os.getenv("PASSWORD")
+
     async with API() as api:
         await api.async_login(username, password)
         print(f"Connected: {api.is_connected}")
-        
+
         headers = {
             **GET_PAYLOAD_HEADERS,
             "Authorization": api.id_token,
         }
-        
+
         payload = json.dumps({"query": INTROSPECTION_QUERY})
-        
+
         async with api._get_session().post(
             GRAPHQL_ENDPOINT,
             data=payload,
             headers=headers,
         ) as resp:
             result = await resp.json()
-            
+
             mutations = result.get("data", {}).get("__schema", {}).get("mutationType", {}).get("fields", [])
             print(f"Available mutations ({len(mutations)}):")
             for m in mutations:

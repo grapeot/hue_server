@@ -29,6 +29,8 @@
 - **Rinnai 刷新改造**: 改为复用会话并增加维护刷新接口 `/api/rinnai/maintenance`
 - **Rinnai 维护刷新修复**: 刷新改为单请求 `GET /api/status?rinnai_refresh=true`，避免 maintenance + status 双请求导致的错误；修复 popstate 监听（useState→useEffect）
 - **Tab URL 路由**: 每个 tab 独立 URL：`/control`、`/schedule`、`/history`，刷新不丢失当前 tab；根路径 `/` 自动替换为 `/control`
+- **start_server.sh**: 重写为 PM2 启动脚本，支持 `./start_server.sh build` 先构建前端；ecosystem.config.js 改用 `__dirname` 实现路径可移植
+- **scripts 整理**: introspect_schema.py、create_schedule.py 移至 scripts/；main_legacy.py 删除；test_unit.py 移至 archive/
 
 ---
 
@@ -97,17 +99,19 @@ npm run dev  # 端口 5173，自动代理 /api 到 7999
 ### 生产模式
 
 ```bash
-# 1. 构建前端
-cd adhoc_jobs/smart_home/frontend
-npm run build
-
-# 2. PM2 启动
 cd adhoc_jobs/smart_home
+
+# 方式一：使用 start_server.sh（推荐）
+./start_server.sh build   # 先构建前端再启动
+# 或
+./start_server.sh        # 直接启动（需已有 frontend/dist）
+
+# 方式二：手动
+cd frontend && npm run build && cd ..
 pm2 start ecosystem.config.js
 pm2 save
 
-# 3. 访问
-# http://localhost:7999
+# 访问 http://localhost:7999
 ```
 
 ### 运行集成测试

@@ -1,9 +1,11 @@
+const path = require('path');
+
 module.exports = {
   apps: [{
     name: 'smart-home',
     script: 'main.py',
-    cwd: '/Users/grapeot/co/knowledge_working/adhoc_jobs/smart_home',
-    interpreter: '/Users/grapeot/co/knowledge_working/adhoc_jobs/smart_home/.venv/bin/python',
+    cwd: __dirname,
+    interpreter: path.join(__dirname, '.venv', 'bin', 'python'),
     env: {
       PORT: 7999,
     },

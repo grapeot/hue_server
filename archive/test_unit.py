@@ -1,3 +1,7 @@
+"""
+ARCHIVED: 针对旧 hue_server 架构的单元测试
+依赖 light_timer_task、/status、/light 等已移除的 API，与当前 main.py 不兼容。
+"""
 import unittest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
@@ -248,4 +252,4 @@ class TestHueAPI(unittest.TestCase):
         self.assertIsNone(main.light_timer_task, "全局timer任务应该被清空")
 
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()
