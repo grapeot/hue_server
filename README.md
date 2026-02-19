@@ -99,8 +99,15 @@ smart_home/
 ## 测试
 
 ```bash
+# 后端
+cd adhoc_jobs/smart_home && source .venv/bin/activate
 pytest test/ -v --ignore=test/test_integration_real.py
+
+# 前端
+cd adhoc_jobs/smart_home/frontend && npm test
 ```
+
+GitHub Actions 在 push/PR 时自动跑后端和前端测试（见 `.github/workflows/test.yml`）。
 
 ## 文档
 

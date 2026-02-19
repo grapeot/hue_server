@@ -42,6 +42,8 @@
 - **History 图表时间轴**: 亮度、热水器温度图改用 XAxis type="number" + dataKey="time"（毫秒时间戳），横轴按实际时间等距显示
 - **Security Review**: 新增 docs/SECURITY_REVIEW.md，覆盖隐私暴露、鉴权、输入校验、密钥、网络等
 - **安全加固（内网专用）**: 移除 /api/debug；Hue 错误不再返回 bridge_ip；wemo_config.yaml 加入 .gitignore，提供 wemo_config.example.yaml（含内网专用说明）；data/ 加入 .gitignore；history hours 限制 1–168，garage door_index 校验范围
+- **GitHub Actions**: `.github/workflows/test.yml` 在 push/PR 时跑后端 pytest、前端 Vitest
+- **前端测试**: 添加 Vitest + deviceStore 单元测试
 
 ---
 
