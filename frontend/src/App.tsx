@@ -62,10 +62,10 @@ function App() {
   }, []);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'control', label: '设备控制', icon: '🎛️' },
-    { key: 'cameras', label: '监控预览', icon: '📷' },
-    { key: 'schedule', label: '定时任务', icon: '⏰' },
-    { key: 'history', label: '历史数据', icon: '📊' },
+    { key: 'control', label: '控制', icon: '🎛️' },
+    { key: 'cameras', label: '监控', icon: '📷' },
+    { key: 'schedule', label: '任务', icon: '⏰' },
+    { key: 'history', label: '历史', icon: '📊' },
   ];
 
   return (
