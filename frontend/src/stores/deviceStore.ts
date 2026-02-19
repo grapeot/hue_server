@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import type { DeviceStatus } from '../types';
 
+type DeviceKey = 'hue' | 'wemo' | 'rinnai' | 'garage';
+
 interface DeviceStore {
   status: DeviceStatus | null;
   loading: boolean;
   error: string | null;
-  fetchStatus: () => Promise<void>;
+  fetchStatus: (devices?: DeviceKey[]) => Promise<void>;
   toggleHue: () => Promise<void>;
   toggleWemo: (name: string) => Promise<void>;
   circulateRinnai: (duration?: number) => Promise<void>;
@@ -20,13 +22,16 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchStatus: async () => {
-    set({ loading: true, error: null });
+  fetchStatus: async (devices?: DeviceKey[]) => {
+    set({ loading: true });
     try {
-      const res = await fetch(`${API_BASE}/status`);
+      const qs = devices?.length ? `?devices=${devices.join(',')}` : '';
+      const res = await fetch(`${API_BASE}/status${qs}`);
       if (!res.ok) throw new Error('Failed to fetch status');
       const data = await res.json();
-      set({ status: data, loading: false });
+      const prev = get().status;
+      const merged = prev ? { ...prev, ...data } : data;
+      set({ status: merged, loading: false, error: null });
     } catch (error) {
       set({ error: String(error), loading: false });
     }
@@ -39,7 +44,7 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
       if (!res.ok || data.status === 'error') {
         throw new Error(data.message || 'Failed to toggle Hue');
       }
-      await get().fetchStatus();
+      await get().fetchStatus(['hue']);
     } catch (error) {
       set({ error: String(error) });
     }
@@ -48,8 +53,11 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
   toggleWemo: async (name: string) => {
     try {
       const res = await fetch(`${API_BASE}/wemo/${name}/toggle`);
-      if (!res.ok) throw new Error('Failed to toggle Wemo');
-      await get().fetchStatus();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.status === 'error') {
+        throw new Error(data.message || 'Failed to toggle Wemo');
+      }
+      await get().fetchStatus(['wemo']);
     } catch (error) {
       set({ error: String(error) });
     }
@@ -69,14 +77,14 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
   refreshRinnai: async () => {
     set({ error: null });
     try {
-      // Single request: trigger maintenance + fetch all status (waits ~5s for device to report)
-      const res = await fetch(`${API_BASE}/status?rinnai_refresh=true`);
+      const res = await fetch(`${API_BASE}/status?devices=rinnai&rinnai_refresh=true`);
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || `维护刷新失败 (${res.status})`);
       }
       const data = await res.json();
-      set({ status: data });
+      const prev = get().status;
+      set({ status: prev ? { ...prev, ...data } : data });
       setTimeout(() => get().fetchStatus(), 10000);
     } catch (error) {
       set({ error: error instanceof Error ? error.message : String(error) });

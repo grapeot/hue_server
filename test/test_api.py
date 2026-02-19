@@ -123,3 +123,14 @@ class TestStatusEndpoint:
         assert "rinnai" in data
         assert data["rinnai"]["is_online"] is True
         mock_rinnai_status.assert_called_once_with(trigger_maintenance=True)
+
+    @patch('services.wemo_service.wemo_service.get_all_status')
+    def test_get_status_devices_wemo_only(self, mock_wemo):
+        mock_wemo.return_value = {"coffee": {"name": "coffee", "is_on": True}}
+        response = client.get("/api/status?devices=wemo")
+        assert response.status_code == 200
+        data = response.json()
+        assert "wemo" in data
+        assert "hue" not in data
+        assert "rinnai" not in data
+        assert "garage" not in data

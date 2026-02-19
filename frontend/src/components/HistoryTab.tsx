@@ -66,13 +66,15 @@ export function HistoryTab() {
     .filter(h => h.device_type === 'hue')
     .map(h => {
       const data = parseData(h.data);
+      const ts = new Date(h.timestamp).getTime();
       return {
+        time: ts,
         timestamp: new Date(h.timestamp).toLocaleTimeString('zh-CN'),
         brightness: (data.brightness as number) || 0,
         is_on: data.is_on ? 1 : 0,
       };
     })
-    .reverse();
+    .sort((a, b) => a.time - b.time);
 
   const wemoHistory: Record<string, { timestamp: string; on_minutes: number }[]> = {};
   history
@@ -96,14 +98,16 @@ export function HistoryTab() {
     .filter(h => h.device_type === 'rinnai')
     .map(h => {
       const data = parseData(h.data);
+      const ts = new Date(h.timestamp).getTime();
       return {
+        time: ts,
         timestamp: new Date(h.timestamp).toLocaleTimeString('zh-CN'),
-        inlet_temp: (data.inlet_temp as number) || 0,
-        outlet_temp: (data.outlet_temp as number) || 0,
-        set_temp: (data.set_temperature as number) || 0,
+        inlet_temp: (data.inlet_temp as number) ?? 0,
+        outlet_temp: (data.outlet_temp as number) ?? 0,
+        set_temp: (data.set_temperature as number) ?? 0,
       };
     })
-    .reverse();
+    .sort((a, b) => a.time - b.time);
 
   const wemoTotalOn: Record<string, number> = {};
   Object.entries(wemoHistory).forEach(([name, records]) => {
@@ -126,9 +130,15 @@ export function HistoryTab() {
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={hueHistory}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} />
+              <XAxis
+                dataKey="time"
+                type="number"
+                domain={['dataMin', 'dataMax']}
+                tickFormatter={(ts) => new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                tick={{ fontSize: 10 }}
+              />
               <YAxis domain={[0, 254]} />
-              <Tooltip />
+              <Tooltip labelFormatter={(ts) => new Date(Number(ts)).toLocaleTimeString('zh-CN')} />
               <Line type="monotone" dataKey="brightness" stroke="#8884d8" dot={false} />
             </LineChart>
           </ResponsiveContainer>
@@ -156,9 +166,15 @@ export function HistoryTab() {
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={rinnaiHistory}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" tick={{ fontSize: 10 }} />
+              <XAxis
+                dataKey="time"
+                type="number"
+                domain={['dataMin', 'dataMax']}
+                tickFormatter={(ts) => new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                tick={{ fontSize: 10 }}
+              />
               <YAxis domain={[0, 150]} />
-              <Tooltip />
+              <Tooltip labelFormatter={(ts) => new Date(Number(ts)).toLocaleTimeString('zh-CN')} />
               <Line type="monotone" dataKey="set_temp" stroke="#8884d8" dot={false} name="设定温度" />
               <Line type="monotone" dataKey="inlet_temp" stroke="#82ca9d" dot={false} name="进水温度" />
               <Line type="monotone" dataKey="outlet_temp" stroke="#ffc658" dot={false} name="出水温度" />

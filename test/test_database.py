@@ -1,12 +1,12 @@
+import json
 import pytest
-import tempfile
-import os
 
 from models.database import (
     get_connection,
     init_db,
     save_device_state,
-    get_device_history
+    get_device_history,
+    delete_rinnai_zero_temp_records,
 )
 
 
@@ -55,3 +55,15 @@ class TestDatabase:
         history = get_device_history(hours=1)
         
         assert len(history) == 2
+
+    def test_delete_rinnai_zero_temp_records(self):
+        save_device_state("rinnai", "main_house", {"inlet_temp": 0, "outlet_temp": 0})
+        save_device_state("rinnai", "main_house", {"inlet_temp": 100, "outlet_temp": 120})
+        assert len(get_device_history(device_type="rinnai", hours=1)) == 2
+
+        deleted = delete_rinnai_zero_temp_records()
+        assert deleted == 1
+        history = get_device_history(device_type="rinnai", hours=1)
+        assert len(history) == 1
+        data = json.loads(history[0]["data"]) if isinstance(history[0]["data"], str) else history[0]["data"]
+        assert data["inlet_temp"] == 100

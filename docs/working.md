@@ -36,6 +36,10 @@
 - **load_dotenv**: main.py 显式指定 `Path(__file__).parent / ".env"`，确保 PM2 环境下正确加载
 - **start_server.sh**: 不 source .env（含空格的值如 `Baby room` 会被 shell 误解析为命令）
 - **Wemo 配置与调度迁移**: wemo_config.yaml 移至 config/，wemo_schedule.py 移至 services/；更新 main、wemo_service、refresh_wemo_devices 及文档中的路径引用
+- **Status API 分解**: `/api/status?devices=hue,wemo,rinnai,garage` 支持按设备拉取，无参数时拉取全部；各设备独立 try-except；前端 toggle 后只 fetch 对应设备
+- **维护刷新存库**: 点击「维护刷新」时，Rinnai 状态顺手写入 device_history 表
+- **Rinnai 无效数据过滤**: 进水/出水温度为 0 时不存库（可能为 partial failure）；api/status 与 scheduler 均加此逻辑；`scripts/backfill_rinnai_zero_temp.py` 删除已有无效记录
+- **History 图表时间轴**: 亮度、热水器温度图改用 XAxis type="number" + dataKey="time"（毫秒时间戳），横轴按实际时间等距显示
 
 ---
 

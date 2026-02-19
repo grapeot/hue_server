@@ -4,6 +4,7 @@ export interface HueStatus {
   brightness: number;
   timer_active?: boolean;
   error?: string;
+  bridge_ip?: string;
 }
 
 export interface WemoDevice {

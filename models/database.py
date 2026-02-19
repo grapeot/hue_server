@@ -45,6 +45,24 @@ def save_device_state(device_type: str, device_name: str, data: dict):
     conn.commit()
     conn.close()
 
+def delete_rinnai_zero_temp_records():
+    """Remove Rinnai records where inlet_temp=0 and outlet_temp=0 (invalid/stale data)."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE FROM device_history
+        WHERE device_type = 'rinnai'
+        AND (
+            json_extract(data, '$.inlet_temp') = 0
+            OR json_extract(data, '$.outlet_temp') = 0
+        )
+    """)
+    deleted = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return deleted
+
+
 def get_device_history(device_type: str = None, device_name: str = None, hours: int = 24):
     conn = get_connection()
     cursor = conn.cursor()

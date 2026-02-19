@@ -105,6 +105,10 @@ function App() {
       {/* Footer */}
       <footer className="max-w-2xl mx-auto px-4 py-6 text-center text-xs text-gray-400">
         智能家居系统 v2.0
+        {' · '}
+        <a href="/api/debug" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">
+          调试信息
+        </a>
       </footer>
     </div>
   );

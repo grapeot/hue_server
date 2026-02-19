@@ -14,17 +14,18 @@ logger = logging.getLogger(__name__)
 class HueService:
     def __init__(self):
         self.bridge: Optional[Bridge] = None
+        self.bridge_ip: Optional[str] = os.getenv("HUE_BRIDGE_IP")
         self.light_name = os.getenv("HUE_LIGHT_NAME", "Baby room")
         self.timer_task: Optional[asyncio.Task] = None
     
     def connect(self) -> bool:
         try:
-            bridge_ip = os.getenv("HUE_BRIDGE_IP")
-            if not bridge_ip:
+            self.bridge_ip = os.getenv("HUE_BRIDGE_IP")
+            if not self.bridge_ip:
                 logger.error("HUE_BRIDGE_IP not set")
                 return False
-            logger.info(f"Connecting to Hue Bridge at {bridge_ip}")
-            self.bridge = Bridge(bridge_ip)
+            logger.info(f"Connecting to Hue Bridge at {self.bridge_ip}")
+            self.bridge = Bridge(self.bridge_ip)
             self.bridge.connect()
             logger.info("Connected to Hue Bridge")
             return True
@@ -56,9 +57,10 @@ class HueService:
                 "timer_active": self.timer_task is not None and not self.timer_task.done()
             }
         except OSError as e:
-            logger.warning(f"Hue Bridge unreachable: {e}")
-            err_msg = "Hue Bridge 不可达" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
-            return {"name": self.light_name, "error": err_msg, "is_on": False, "brightness": 0, "timer_active": False}
+            ip_info = f" (IP: {self.bridge_ip})" if self.bridge_ip else ""
+            logger.warning(f"Hue Bridge unreachable{ip_info}: {e}")
+            err_msg = f"Hue Bridge 不可达{ip_info}" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
+            return {"name": self.light_name, "error": err_msg, "bridge_ip": self.bridge_ip, "is_on": False, "brightness": 0, "timer_active": False}
     
     def turn_off(self) -> dict:
         if not self.bridge:
@@ -78,9 +80,10 @@ class HueService:
                 "timestamp": datetime.now().isoformat()
             }
         except OSError as e:
-            logger.warning(f"Hue Bridge unreachable: {e}")
-            msg = "Hue Bridge 不可达" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
-            return {"status": "error", "message": msg}
+            ip_info = f" (IP: {self.bridge_ip})" if self.bridge_ip else ""
+            logger.warning(f"Hue Bridge unreachable{ip_info}: {e}")
+            msg = f"Hue Bridge 不可达{ip_info}" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
+            return {"status": "error", "message": msg, "bridge_ip": self.bridge_ip}
     
     def turn_on(self, brightness: int = 128) -> dict:
         if not self.bridge:
@@ -98,14 +101,15 @@ class HueService:
                 "timestamp": datetime.now().isoformat()
             }
         except OSError as e:
-            logger.warning(f"Hue Bridge unreachable: {e}")
-            msg = "Hue Bridge 不可达" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
-            return {"status": "error", "message": msg}
+            ip_info = f" (IP: {self.bridge_ip})" if self.bridge_ip else ""
+            logger.warning(f"Hue Bridge unreachable{ip_info}: {e}")
+            msg = f"Hue Bridge 不可达{ip_info}" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
+            return {"status": "error", "message": msg, "bridge_ip": self.bridge_ip}
     
     def toggle(self) -> dict:
         status = self.get_status()
         if status.get("error"):
-            return {"status": "error", "message": status["error"]}
+            return {"status": "error", "message": status["error"], "bridge_ip": status.get("bridge_ip", self.bridge_ip)}
         if status.get("is_on"):
             return self.turn_off()
         else:
@@ -148,9 +152,10 @@ class HueService:
                 "timer_reset": timer_reset
             }
         except OSError as e:
-            logger.warning(f"Hue Bridge unreachable: {e}")
-            msg = "Hue Bridge 不可达" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
-            return {"status": "error", "message": msg}
+            ip_info = f" (IP: {self.bridge_ip})" if self.bridge_ip else ""
+            logger.warning(f"Hue Bridge unreachable{ip_info}: {e}")
+            msg = f"Hue Bridge 不可达{ip_info}" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
+            return {"status": "error", "message": msg, "bridge_ip": self.bridge_ip}
     
     def cancel_timer(self) -> dict:
         if self.timer_task and not self.timer_task.done():

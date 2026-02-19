@@ -36,13 +36,16 @@ async def collect_device_states():
     
     rinnai_status = await rinnai_service.get_status()
     if "error" not in rinnai_status:
-        save_device_state("rinnai", "main_house", {
-            "set_temperature": rinnai_status.get("set_temperature"),
-            "inlet_temp": rinnai_status.get("inlet_temp"),
-            "outlet_temp": rinnai_status.get("outlet_temp"),
-            "water_flow": rinnai_status.get("water_flow"),
-            "recirculation_enabled": rinnai_status.get("recirculation_enabled")
-        })
+        inlet = rinnai_status.get("inlet_temp")
+        outlet = rinnai_status.get("outlet_temp")
+        if (inlet is not None and inlet != 0) or (outlet is not None and outlet != 0):
+            save_device_state("rinnai", "main_house", {
+                "set_temperature": rinnai_status.get("set_temperature"),
+                "inlet_temp": inlet,
+                "outlet_temp": outlet,
+                "water_flow": rinnai_status.get("water_flow"),
+                "recirculation_enabled": rinnai_status.get("recirculation_enabled")
+            })
     
     logger.info("Device states collected")
 

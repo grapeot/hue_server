@@ -37,8 +37,8 @@ export function ControlTab() {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-700 text-sm">
-          操作提示: {error}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 font-medium">
+          ⚠️ 操作失败: {error}
         </div>
       )}
 
@@ -48,9 +48,22 @@ export function ControlTab() {
           <h2 className="text-base font-semibold text-gray-800 flex items-center">
             <span className="text-xl mr-2">💡</span>
             灯光控制
+            {status?.hue?.error && (
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                离线
+              </span>
+            )}
           </h2>
         </div>
         <div className="p-4">
+          {status?.hue?.error && (
+            <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+              {status.hue.error}
+              {status.hue.bridge_ip && (
+                <span className="block mt-1 font-mono text-xs">当前配置 IP: {status.hue.bridge_ip}</span>
+              )}
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <div>
               <div className="font-medium text-gray-900">{status?.hue?.name || '卧室灯'}</div>
@@ -58,7 +71,7 @@ export function ControlTab() {
                 {status?.hue?.error ? (
                   <span className="flex items-center text-amber-600">
                     <span className="w-2 h-2 bg-amber-400 rounded-full mr-1.5"></span>
-                    离线 · {status.hue.error}
+                    {status.hue.error}
                   </span>
                 ) : status?.hue?.is_on ? (
                   <span className="flex items-center">
