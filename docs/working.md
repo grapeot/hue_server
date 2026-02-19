@@ -35,6 +35,7 @@
 - **Hue 服务容错**: get_status/turn_on/turn_off/toggle/set_timer 捕获 OSError，离线时返回友好错误；前端 toggleHue 检查 response.status
 - **load_dotenv**: main.py 显式指定 `Path(__file__).parent / ".env"`，确保 PM2 环境下正确加载
 - **start_server.sh**: 不 source .env（含空格的值如 `Baby room` 会被 shell 误解析为命令）
+- **Wemo 配置与调度迁移**: wemo_config.yaml 移至 config/，wemo_schedule.py 移至 services/；更新 main、wemo_service、refresh_wemo_devices 及文档中的路径引用
 
 ---
 
@@ -60,6 +61,12 @@
 ### FastAPI 静态文件 SPA
 - **问题**: React Router 需要 SPA fallback 到 index.html
 - **解决**: 在 main.py 中添加 catch-all 路由，优先检查静态文件，否则返回 index.html
+
+### PM2 与直接运行网络环境不同
+- **现象**: 直接 `python main.py` 可连接 Hue Bridge，PM2 下报 No route to host (errno 65)
+- **原因**: PM2 进程可能运行在不同机器、不同会话或启动时网络不同（如通过 SSH 在远程启动 PM2）
+- **排查**: 访问 `/api/debug` 看 connectivity_test；直接运行对比
+- **临时方案**: 用 `screen`/`tmux` 或 `nohup python main.py &` 替代 PM2，或确保 PM2 与终端在同一机器、同一网络
 
 ### .env 不要用 shell source
 - **问题**: `source .env` 时，`HUE_LIGHT_NAME=Baby room` 中的 `room` 会被解析为命令执行

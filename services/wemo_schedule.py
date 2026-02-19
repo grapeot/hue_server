@@ -20,12 +20,12 @@ PACIFIC_TZ = pytz.timezone('America/Los_Angeles')
 class WemoScheduleManager:
     """管理Wemo设备的定时任务，使用APScheduler"""
     
-    def __init__(self, config_file: str = "wemo_config.yaml"):
+    def __init__(self, config_file: str = "config/wemo_config.yaml"):
         """
         初始化定时任务管理器
         
         Args:
-            config_file: YAML配置文件路径
+            config_file: YAML配置文件路径（相对于项目根目录）
         """
         self.config_file = config_file
         self.devices: Dict[str, any] = {}  # 存储设备名称到设备对象的映射

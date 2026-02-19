@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 刷新Wemo设备配置脚本
-重新发现局域网内的Wemo设备，并更新wemo_config.yaml文件
+重新发现局域网内的Wemo设备，并更新 config/wemo_config.yaml 文件
 """
 
 import sys
@@ -126,7 +126,7 @@ def main():
     """主函数"""
     # 确定配置文件路径
     project_root = Path(__file__).parent.parent
-    config_path = project_root / 'wemo_config.yaml'
+    config_path = project_root / 'config' / 'wemo_config.yaml'
     
     # 如果通过环境变量指定了配置文件路径
     config_file_env = os.getenv('WEMO_CONFIG_FILE')

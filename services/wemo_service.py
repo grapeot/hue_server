@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class WemoService:
     def __init__(self):
         self.devices: Dict[str, pywemo.WeMoDevice] = {}
-        self.config_file = os.getenv("WEMO_CONFIG_FILE", "wemo_config.yaml")
+        self.config_file = os.getenv("WEMO_CONFIG_FILE", "config/wemo_config.yaml")
     
     def init_devices(self) -> bool:
         config_path = Path(self.config_file)

@@ -138,7 +138,7 @@
 |-----|----------|------|------|
 | Hue Baby Room | 每天 20:00 | 开灯，亮度设为 128 | APScheduler |
 | Hue Baby Room | 每天 08:20 | 关灯 | APScheduler |
-| Wemo (现有) | 按 wemo_config.yaml | 开/关 | APScheduler (已有) |
+| Wemo (现有) | 按 config/wemo_config.yaml | 开/关 | APScheduler (已有) |
 
 **热水器 Schedule**
 - 从 Rinnai API 读取现有 schedule（只读展示）
@@ -496,8 +496,8 @@ VALUES ('rinnai', 'main_house', '{"set_temperature": 125, "inlet_temp": 103, "ou
 smart_home/
 ├── main.py                     # FastAPI 主程序 (更新)
 ├── requirements.txt            # Python 依赖 (更新)
-├── wemo_schedule.py            # Wemo 定时任务 (现有)
-├── wemo_config.yaml            # Wemo 配置 (现有)
+├── config/
+│   └── wemo_config.yaml        # Wemo 配置 (现有)
 ├── .env                        # 环境变量
 │
 ├── api/                        # API 路由 (新增)
@@ -518,7 +518,8 @@ smart_home/
 │   ├── wemo_service.py         # Wemo 服务
 │   ├── rinnai_service.py       # Rinnai 服务
 │   ├── meross_service.py       # Meross 服务
-│   └── scheduler.py            # 定时任务管理
+│   ├── scheduler.py            # 定时任务管理
+│   └── wemo_schedule.py        # Wemo 定时任务 (现有)
 │
 ├── data/                       # 数据存储 (新增)
 │   └── smart_home.db           # SQLite 数据库

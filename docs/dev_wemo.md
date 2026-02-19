@@ -32,8 +32,8 @@ pip install -r requirements.txt
 在`.env`文件中可以配置以下选项（可选）：
 
 ```bash
-# Wemo配置文件路径（默认：wemo_config.yaml）
-WEMO_CONFIG_FILE=wemo_config.yaml
+# Wemo配置文件路径（默认：config/wemo_config.yaml）
+WEMO_CONFIG_FILE=config/wemo_config.yaml
 
 # 是否在启动时自动发现设备（默认：false，使用hardcode配置）
 WEMO_AUTO_DISCOVER=false
@@ -41,7 +41,7 @@ WEMO_AUTO_DISCOVER=false
 
 ### 配置文件示例
 
-创建`wemo_config.yaml`文件（默认在项目根目录）：
+创建`config/wemo_config.yaml`文件：
 
 ```yaml
 # Wemo设备配置
@@ -107,7 +107,7 @@ schedule:
 
 ### refresh_wemo_devices.py - 刷新设备配置
 
-位于`scripts/refresh_wemo_devices.py`，用于重新发现设备并更新`wemo_config.yaml`：
+位于`scripts/refresh_wemo_devices.py`，用于重新发现设备并更新`config/wemo_config.yaml`：
 
 ```bash
 python scripts/refresh_wemo_devices.py
@@ -115,7 +115,7 @@ python scripts/refresh_wemo_devices.py
 
 该脚本会：
 1. 扫描局域网发现所有Wemo设备
-2. 读取现有的`wemo_config.yaml`（如果存在）
+2. 读取现有的`config/wemo_config.yaml`（如果存在）
 3. 更新设备信息（IP、端口、类型等）
 4. 保留现有的定时任务配置
 5. 保存更新后的配置文件
@@ -240,7 +240,7 @@ GET /wemo/schedule/tasks
       "timezone": "Pacific"
     }
   ],
-  "config_file": "wemo_config.yaml"
+  "config_file": "config/wemo_config.yaml"
 }
 ```
 
@@ -249,7 +249,7 @@ GET /wemo/schedule/tasks
 
 ### 配置文件格式
 
-所有Wemo相关配置统一使用YAML格式，默认文件名为`wemo_config.yaml`。
+所有Wemo相关配置统一使用YAML格式，默认路径为`config/wemo_config.yaml`。
 
 **配置文件结构**：
 ```yaml
@@ -331,7 +331,7 @@ schedule:
 
 ### 配置文件位置
 
-- 默认位置：项目根目录下的`wemo_config.yaml`
+- 默认位置：`config/wemo_config.yaml`
 - 可通过环境变量`WEMO_CONFIG_FILE`自定义路径
 
 ### 时区说明
@@ -362,7 +362,7 @@ schedule:
 服务器启动时的行为取决于配置：
 
 1. **Hardcode模式（默认，推荐）**：
-   - 从`wemo_config.yaml`读取hardcode的设备信息
+   - 从`config/wemo_config.yaml`读取hardcode的设备信息
    - 直接使用配置中的IP地址和端口连接设备
    - 不进行网络扫描，启动速度快
    - 如果设备连接失败，会在日志中记录警告，但不影响服务器启动
@@ -383,7 +383,7 @@ API调用时使用精确匹配：
 
 当设备信息需要更新时（如IP地址变化）：
 1. 运行`scripts/refresh_wemo_devices.py`脚本重新发现设备
-2. 脚本会自动更新`wemo_config.yaml`中的设备信息（IP、端口、类型）
+2. 脚本会自动更新`config/wemo_config.yaml`中的设备信息（IP、端口、类型）
 3. 保留现有的定时任务配置
 4. 重启服务器应用新配置
 
@@ -403,7 +403,7 @@ API调用时使用精确匹配：
 
 ### 定时任务不执行
 
-1. **检查配置文件**：确认`wemo_config.yaml`格式正确，YAML语法无误
+1. **检查配置文件**：确认`config/wemo_config.yaml`格式正确，YAML语法无误
 2. **检查设备名称**：确认定时任务中的设备名称与配置文件中的设备名称匹配
 3. **检查时区**：确认配置文件中的时区设置正确
 4. **查看日志**：检查定时任务调度器的启动日志，确认任务已加载
@@ -469,7 +469,7 @@ scheduler.add_job(
 
 1. **初始配置**：
    - 运行`scripts/refresh_wemo_devices.py`发现设备并生成初始配置文件
-   - 或调用`GET /wemo/devices`获取设备信息后手动创建`wemo_config.yaml`
+   - 或调用`GET /wemo/devices`获取设备信息后手动创建`config/wemo_config.yaml`
    - 在配置文件中hardcode设备信息并配置定时任务
 
 2. **日常运行**：
@@ -479,7 +479,7 @@ scheduler.add_job(
 
 3. **设备信息更新**（如IP变化）：
    - 运行`scripts/refresh_wemo_devices.py`脚本
-   - 脚本自动更新`wemo_config.yaml`中的设备信息
+   - 脚本自动更新`config/wemo_config.yaml`中的设备信息
    - 重启服务器应用新配置
 
 ## 设计优势
