@@ -2,6 +2,18 @@
 
 ## Changelog
 
+### 2026-02-19
+
+- **Cameras 监控功能**: 新增 Tab 2 监控预览
+  - 后端: `services/camera_service.py` + `api/cameras.py`
+  - 异步proxy快照 (httpx + DigestAuth)，不落盘、不缓存
+  - 前端: `CamerasTab.tsx`、`CameraCard.tsx`、`CameraModal.tsx`、`useCameras.ts`
+- **Tab 标签缩短**: 设备控制→控制、监控预览→监控、定时任务→任务、历史数据→历史（适配手机）
+- **监控布局**: 桌面端一行2个画面 (md:grid-cols-2)
+- **Security hardening**: `.gitignore` 添加 `config/cameras.yaml`，`.env.example` 添加摄像头凭证
+- **删除参考实现**: 移除 `ref_cameras/` 目录
+- **Wemo Insight**: 确认 Tree、Veggie 是 Insight Switch，可读取功率/用电量
+
 ### 2026-02-18
 
 - **项目初始化**: 合并 hue_server 和 rinnai_heater 到 smart_home
@@ -101,14 +113,16 @@
 - [x] 实现 Control Tab
 - [x] 实现 Schedule Tab
 - [x] 实现 History Tab
+- [x] 实现 Cameras Tab (Amcrest 监控预览)
 - [x] 界面全中文化
 - [x] UI 设计优化
 - [x] PM2 部署脚本
 - [x] 生产环境静态文件 serve
 - [x] 集成测试 (skip by default)
-- [x] Tab URL 路由 (/control, /schedule, /history)
+- [x] Tab URL 路由 (/control, /cameras, /schedule, /history)
 - [x] Rinnai 维护刷新单请求改造
 - [ ] 实际部署到服务器
+- [ ] Wemo Insight 功率/用电量展示 (Tree, Veggie)
 
 ---
 
