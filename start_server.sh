@@ -1,22 +1,16 @@
 #!/bin/bash
-# Smart Home Dashboard - PM2 启动脚本
-# 用法: ./start_server.sh [build]
-# 带 build 参数时会先构建前端
+# Smart Home Dashboard - 由 PM2 启动的入口脚本
+# 用法: pm2 start ecosystem.config.js
+# 此脚本负责激活环境并启动 Python 服务
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-if [ "$1" = "build" ]; then
-  echo "Building frontend..."
-  (cd frontend && npm run build)
-  echo "Frontend built."
-fi
+# 激活虚拟环境
+source "${SCRIPT_DIR}/.venv/bin/activate"
 
-if [ ! -d "frontend/dist" ]; then
-  echo "Warning: frontend/dist not found. Run with 'build' to build first, or start in dev mode."
-fi
+# 环境变量（可被 ecosystem.config.js 的 env 覆盖）
+export PORT="${PORT:-7999}"
 
-echo "Starting with PM2..."
-pm2 start ecosystem.config.js
-echo "Started. Run 'pm2 logs smart-home' to view logs, 'pm2 stop smart-home' to stop."
+exec python main.py

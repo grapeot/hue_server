@@ -3,9 +3,9 @@ const path = require('path');
 module.exports = {
   apps: [{
     name: 'smart-home',
-    script: 'main.py',
+    script: path.join(__dirname, 'start_server.sh'),
+    interpreter: '/bin/bash',
     cwd: __dirname,
-    interpreter: path.join(__dirname, '.venv', 'bin', 'python'),
     env: {
       PORT: 7999,
     },
