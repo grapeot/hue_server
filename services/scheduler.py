@@ -35,7 +35,7 @@ async def collect_device_states():
                 "is_on": status.get("is_on")
             })
     
-    rinnai_status = await rinnai_service.get_status()
+    rinnai_status = await rinnai_service.get_status(trigger_maintenance=True)
     if "error" not in rinnai_status:
         inlet = rinnai_status.get("inlet_temp")
         outlet = rinnai_status.get("outlet_temp")
