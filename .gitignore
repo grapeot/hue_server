@@ -20,6 +20,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Reference implementation
+ref_*
+
 # Virtual Environment
 py310/
 venv/
@@ -46,3 +49,4 @@ logs/
 tools/
 data/
 config/wemo_config.yaml
+config/cameras.yaml

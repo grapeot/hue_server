@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const PACIFIC_TZ = 'America/Los_Angeles';
 
@@ -170,7 +170,7 @@ export function HistoryTab() {
       {rinnaiHistory.length > 0 && (
         <div className="bg-white rounded-lg shadow p-4">
           <h2 className="text-lg font-semibold mb-3">🚿 热水器温度（24小时）</h2>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={280}>
             <LineChart data={rinnaiHistory}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
@@ -182,6 +182,7 @@ export function HistoryTab() {
               />
               <YAxis domain={[0, 150]} />
               <Tooltip labelFormatter={(ts) => formatPacificTime(Number(ts))} />
+              <Legend verticalAlign="bottom" height={36} />
               <Line type="monotone" dataKey="set_temp" stroke="#8884d8" dot={false} name="设定温度" />
               <Line type="monotone" dataKey="inlet_temp" stroke="#82ca9d" dot={false} name="进水温度" />
               <Line type="monotone" dataKey="outlet_temp" stroke="#ffc658" dot={false} name="出水温度" />
