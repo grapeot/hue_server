@@ -45,19 +45,26 @@ def save_device_state(device_type: str, device_name: str, data: dict):
     conn.commit()
     conn.close()
 
-def delete_rinnai_zero_temp_records():
-    """Remove Rinnai records where inlet_temp=0 and outlet_temp=0 (invalid/stale data)."""
+def delete_rinnai_zero_temp_records(dry_run: bool = False):
+    """Remove Rinnai records where inlet_temp or outlet_temp is 0 or NULL (invalid/stale data)."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        DELETE FROM device_history
+        SELECT id, timestamp, json_extract(data, '$.inlet_temp') as inlet, json_extract(data, '$.outlet_temp') as outlet
+        FROM device_history
         WHERE device_type = 'rinnai'
         AND (
-            json_extract(data, '$.inlet_temp') = 0
-            OR json_extract(data, '$.outlet_temp') = 0
+            json_extract(data, '$.inlet_temp') IS NULL OR json_extract(data, '$.inlet_temp') = 0
+            OR json_extract(data, '$.outlet_temp') IS NULL OR json_extract(data, '$.outlet_temp') = 0
         )
     """)
-    deleted = cursor.rowcount
+    to_delete = cursor.fetchall()
+    if dry_run:
+        conn.close()
+        return [(r[0], r[1], r[2], r[3]) for r in to_delete]
+    for row in to_delete:
+        cursor.execute("DELETE FROM device_history WHERE id = ?", (row[0],))
+    deleted = len(to_delete)
     conn.commit()
     conn.close()
     return deleted

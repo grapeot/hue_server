@@ -38,7 +38,7 @@
 - **Wemo 配置与调度迁移**: wemo_config.yaml 移至 config/，wemo_schedule.py 移至 services/；更新 main、wemo_service、refresh_wemo_devices 及文档中的路径引用
 - **Status API 分解**: `/api/status?devices=hue,wemo,rinnai,garage` 支持按设备拉取，无参数时拉取全部；各设备独立 try-except；前端 toggle 后只 fetch 对应设备
 - **维护刷新存库**: 点击「维护刷新」时，Rinnai 状态顺手写入 device_history 表
-- **Rinnai 无效数据过滤**: 进水/出水温度为 0 时不存库（可能为 partial failure）；api/status 与 scheduler 均加此逻辑；`scripts/backfill_rinnai_zero_temp.py` 删除已有无效记录
+- **Rinnai 无效数据过滤**: 进水/出水温度为 0 或 NULL 时不存库；backfill 同时删除 0 与 NULL；支持 `--dry-run` 预览
 - **History 图表时间轴**: 亮度、热水器温度图改用 XAxis type="number" + dataKey="time"（毫秒时间戳），横轴按实际时间等距显示
 - **Security Review**: 新增 docs/SECURITY_REVIEW.md，覆盖隐私暴露、鉴权、输入校验、密钥、网络等
 - **安全加固（内网专用）**: 移除 /api/debug；Hue 错误不再返回 bridge_ip；wemo_config.yaml 加入 .gitignore，提供 wemo_config.example.yaml（含内网专用说明）；data/ 加入 .gitignore；history hours 限制 1–168，garage door_index 校验范围

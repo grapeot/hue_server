@@ -1,223 +1,108 @@
-# Hue Light Control Server
+# Smart Home Dashboard
 
-一个基于FastAPI的Philips Hue灯控制服务器，提供RESTful API来控制Hue灯的开关和定时功能。
+统一的智能家居控制面板，支持 Hue 灯光、Wemo 开关、Rinnai 热水器、Meross 车库门。内网专用。
 
-## 功能特点
+## 功能
 
-- 通过HTTP API控制Hue灯
-- 支持即时开关和延时关闭功能
-- 自动保存和恢复灯的状态
-- 完整的错误处理和日志记录
-- 支持环境变量配置
-- 包含单元测试和集成测试
+- **设备控制**：实时查看和控制灯光、开关、热水器、车库门
+- **定时任务**：Hue 早晚开关、Wemo 咖啡机定时
+- **历史数据**：24 小时内的亮度、开关、温度图表
+
+## 设备支持
+
+| 设备 | 说明 |
+|------|------|
+| Hue 灯光 | 1 盏，本地 phue API |
+| Wemo 开关 | 4 个，SSDP + pywemo |
+| Rinnai 热水器 | 云端 aiorinnai，支持循环 |
+| Meross 车库门 | 云端 meross-iot |
 
 ## 快速开始
 
-### 前提条件
+### 环境
 
-- Python 3.10 或更高版本
-- Philips Hue Bridge 和灯泡
-- Bridge 的 IP 地址
-- 灯泡的名称
+- Python 3.10+
+- Node.js 18+（前端构建）
 
 ### 安装
 
-1. 克隆仓库：
 ```bash
-git clone https://github.com/grapeot/hue_server.git
-cd hue_server
-```
-
-2. 创建并激活虚拟环境：
-```bash
-python -m venv py310
-source py310/bin/activate  # Linux/Mac
-# 或
-.\py310\Scripts\activate  # Windows
-```
-
-3. 安装依赖：
-```bash
+cd adhoc_jobs/smart_home
+python -m venv .venv
+source .venv/bin/activate  # 或 Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. 配置环境变量：
-```bash
-cp .env.example .env
-```
-编辑 `.env` 文件，设置：
-- `HUE_BRIDGE_IP`：Hue Bridge 的 IP 地址
-- `HUE_LIGHT_NAME`：要控制的灯的名称
-- `PORT`：服务器端口（默认8000）
+### 配置
 
-### 首次使用
+1. 复制 `.env.example` 为 `.env`，填入：
+   - `HUE_BRIDGE_IP`、`HUE_LIGHT_NAME`
+   - `RINNAI_USERNAME`、`RINNAI_PASSWORD`
+   - `MEROSS_EMAIL`、`MEROSS_PASSWORD`
 
-1. 找到您的 Hue Bridge IP 地址：
-   - 在 Hue App 中查看
-   - 或访问 https://discovery.meethue.com/
+2. 复制 `config/wemo_config.example.yaml` 为 `config/wemo_config.yaml`，填入真实设备 IP；或运行 `python scripts/refresh_wemo_devices.py` 自动发现
 
-2. 首次运行时需要与 Bridge 配对：
-   - 启动服务器
-   - 在看到提示后，按下 Bridge 上的物理按钮
+3. 首次连接 Hue 需按下 Bridge 物理按钮完成配对
 
-### 运行服务器
+### 运行
 
 ```bash
+# 后端（默认端口 7999）
 python main.py
+
+# 前端开发（另开终端）
+cd frontend && npm install && npm run dev
 ```
-或使用 uvicorn：
+
+生产模式：`cd frontend && npm run build` 后，`main.py` 会自动 serve 静态文件。
+
+### PM2 部署
+
 ```bash
-uvicorn main:app --reload
+pm2 start ecosystem.config.js
+pm2 save
 ```
 
-## API 使用说明
+## API 概览
 
-### 1. 打开灯并设置延时关闭
-```
-GET /light/{minutes}
-```
-- `minutes`：延时关闭时间（分钟），可以使用小数
-- 示例：`GET /light/5` 打开灯并在5分钟后关闭
-- 特殊情况：`GET /light/0` 立即关闭灯
+| 路径 | 说明 |
+|------|------|
+| `GET /api/status` | 设备状态（支持 `?devices=hue,wemo,rinnai,garage`） |
+| `GET /api/hue/toggle` | 灯光开关 |
+| `GET /api/wemo/{name}/toggle` | Wemo 开关 |
+| `GET /api/rinnai/circulate?duration=5` | 热水器循环 |
+| `GET /api/status?rinnai_refresh=true` | 维护刷新 + 存库 |
+| `GET /api/garage/{n}/toggle` | 车库门 |
+| `GET /api/history?hours=24` | 历史数据 |
 
-### 2. 查询灯的状态
-```
-GET /status
-```
-返回灯的当前状态，包括开关状态和亮度。
+## 脚本
 
-### 3. 设置灯的状态
-```
-POST /state
-Content-Type: application/json
-
-{
-    "on": true,
-    "bri": 254
-}
-```
-- `on`：开关状态（true/false）
-- `bri`：亮度（0-254）
+| 脚本 | 说明 |
+|------|------|
+| `scripts/refresh_wemo_devices.py` | 发现 Wemo 设备并更新 config |
+| `scripts/backfill_rinnai_zero_temp.py` | 删除无效 Rinnai 记录（inlet/outlet 为 0 或 NULL） |
+| `scripts/backfill_rinnai_zero_temp.py --dry-run` | 预览将删除的记录 |
 
 ## 项目结构
 
 ```
-hue_server/
-├── main.py              # 主应用文件，包含FastAPI应用和路由
-├── test_unit.py         # 单元测试
-├── test_integration.py  # 集成测试
-├── requirements.txt     # 项目依赖
-├── .env.example        # 环境变量模板
-├── LICENSE             # MIT许可证
-└── README.md           # 项目文档
+smart_home/
+├── main.py              # FastAPI 入口
+├── api/                 # 路由
+├── services/            # Hue/Wemo/Rinnai/Meross 服务
+├── models/database.py   # SQLite 历史
+├── config/              # wemo_config.yaml（gitignore）
+├── frontend/            # React + Vite
+└── scripts/             # 工具脚本
 ```
 
-### 主要组件
+## 测试
 
-- `main.py`
-  - FastAPI 应用程序
-  - Hue Bridge 连接管理
-  - API 路由和处理函数
-  - 错误处理和日志记录
-
-- `test_unit.py`
-  - 单元测试套件
-  - Mock 对象和测试用例
-  - 测试各种边界情况
-
-- `test_integration.py`
-  - 集成测试
-  - 实际设备交互测试
-  - 状态保存和恢复测试
-
-## 开发指南
-
-### 环境设置
-
-1. 创建开发分支：
 ```bash
-git checkout -b feature/your-feature
+pytest test/ -v --ignore=test/test_integration_real.py
 ```
 
-2. 安装开发依赖：
-```bash
-pip install -r requirements.txt
-```
+## 文档
 
-### 运行测试
-
-1. 单元测试：
-```bash
-python -m unittest test_unit.py -v
-```
-
-2. 集成测试（需要实际的 Hue 设备）：
-```bash
-python test_integration.py
-```
-
-### 代码风格
-
-- 使用 Python 类型注解
-- 保持函数简洁，单一职责
-- 添加适当的注释和文档字符串
-- 使用有意义的变量和函数名
-
-### 提交代码
-
-1. 确保测试通过：
-```bash
-python -m unittest discover -v
-```
-
-2. 提交更改：
-```bash
-git add .
-git commit -m "[Cursor] 你的提交信息"
-```
-
-3. 创建 Pull Request：
-```bash
-gh pr create --title "[Cursor] 你的PR标题" --body-file pr_description.md
-```
-
-## 故障排除
-
-### 常见问题
-
-1. Bridge 连接失败
-   - 确认 IP 地址正确
-   - 检查网络连接
-   - 确认已按下配对按钮
-
-2. 找不到灯
-   - 检查灯的名称是否正确
-   - 确认灯在 Hue App 中可见
-   - 检查灯是否已连接到 Bridge
-
-3. 状态更新延迟
-   - 检查网络延迟
-   - 确认 Bridge 响应正常
-
-### 调试
-
-- 检查日志输出
-- 使用 `/status` 端点验证状态
-- 确认环境变量设置正确
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建功能分支
-3. 提交更改
-4. 创建 Pull Request
-
-请确保：
-- 添加测试用例
-- 更新文档
-- 遵循代码风格
-- 提供清晰的提交信息
-
-## 许可证
-
-MIT License 
+- `docs/dev_dashboard.md` - PRD 与功能规格
+- `docs/working.md` - 开发日志与 Lessons Learned
