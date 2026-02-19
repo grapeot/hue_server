@@ -22,7 +22,6 @@ def _safe_hue_status():
         return {
             "name": hue_service.light_name,
             "error": str(e),
-            "bridge_ip": hue_service.bridge_ip,
             "is_on": False,
             "brightness": 0,
             "timer_active": False,

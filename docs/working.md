@@ -40,6 +40,8 @@
 - **维护刷新存库**: 点击「维护刷新」时，Rinnai 状态顺手写入 device_history 表
 - **Rinnai 无效数据过滤**: 进水/出水温度为 0 时不存库（可能为 partial failure）；api/status 与 scheduler 均加此逻辑；`scripts/backfill_rinnai_zero_temp.py` 删除已有无效记录
 - **History 图表时间轴**: 亮度、热水器温度图改用 XAxis type="number" + dataKey="time"（毫秒时间戳），横轴按实际时间等距显示
+- **Security Review**: 新增 docs/SECURITY_REVIEW.md，覆盖隐私暴露、鉴权、输入校验、密钥、网络等
+- **安全加固（内网专用）**: 移除 /api/debug；Hue 错误不再返回 bridge_ip；wemo_config.yaml 加入 .gitignore，提供 wemo_config.example.yaml（含内网专用说明）；data/ 加入 .gitignore；history hours 限制 1–168，garage door_index 校验范围
 
 ---
 
@@ -69,7 +71,7 @@
 ### PM2 与直接运行网络环境不同
 - **现象**: 直接 `python main.py` 可连接 Hue Bridge，PM2 下报 No route to host (errno 65)
 - **原因**: PM2 进程可能运行在不同机器、不同会话或启动时网络不同（如通过 SSH 在远程启动 PM2）
-- **排查**: 访问 `/api/debug` 看 connectivity_test；直接运行对比
+- **排查**: 直接运行对比；检查 HUE_BRIDGE_IP、网络连通性
 - **临时方案**: 用 `screen`/`tmux` 或 `nohup python main.py &` 替代 PM2，或确保 PM2 与终端在同一机器、同一网络
 
 ### .env 不要用 shell source

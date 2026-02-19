@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 import uvicorn
 
-from api import hue, wemo, rinnai, garage, status, history, debug
+from api import hue, wemo, rinnai, garage, status, history
 from services.hue_service import hue_service
 from services.wemo_service import wemo_service
 from services.rinnai_service import rinnai_service
@@ -42,7 +42,6 @@ app.include_router(rinnai.router)
 app.include_router(garage.router)
 app.include_router(status.router)
 app.include_router(history.router)
-app.include_router(debug.router)
 
 wemo_schedule_manager = None
 

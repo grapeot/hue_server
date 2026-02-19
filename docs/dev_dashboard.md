@@ -497,7 +497,8 @@ smart_home/
 ├── main.py                     # FastAPI 主程序 (更新)
 ├── requirements.txt            # Python 依赖 (更新)
 ├── config/
-│   └── wemo_config.yaml        # Wemo 配置 (现有)
+│   ├── wemo_config.example.yaml  # Wemo 配置模板
+│   └── wemo_config.yaml          # 实际配置（gitignore，从 example 复制）
 ├── .env                        # 环境变量
 │
 ├── api/                        # API 路由 (新增)

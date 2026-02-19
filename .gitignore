@@ -44,5 +44,5 @@ logs/
 
 # Project specific
 tools/
-# .cursorrules data/*.db
-data/*.db-journal
+data/
+config/wemo_config.yaml

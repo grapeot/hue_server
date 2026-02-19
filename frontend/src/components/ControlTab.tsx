@@ -59,9 +59,6 @@ export function ControlTab() {
           {status?.hue?.error && (
             <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
               {status.hue.error}
-              {status.hue.bridge_ip && (
-                <span className="block mt-1 font-mono text-xs">当前配置 IP: {status.hue.bridge_ip}</span>
-              )}
             </div>
           )}
           <div className="flex items-center justify-between">

@@ -41,7 +41,7 @@ WEMO_AUTO_DISCOVER=false
 
 ### 配置文件示例
 
-创建`config/wemo_config.yaml`文件：
+复制 `config/wemo_config.example.yaml` 为 `config/wemo_config.yaml` 并填入真实设备 IP（内网专用，勿提交）：
 
 ```yaml
 # Wemo设备配置
