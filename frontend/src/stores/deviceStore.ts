@@ -35,7 +35,10 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
   toggleHue: async () => {
     try {
       const res = await fetch(`${API_BASE}/hue/toggle`);
-      if (!res.ok) throw new Error('Failed to toggle Hue');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.status === 'error') {
+        throw new Error(data.message || 'Failed to toggle Hue');
+      }
       await get().fetchStatus();
     } catch (error) {
       set({ error: String(error) });

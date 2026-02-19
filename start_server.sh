@@ -10,7 +10,7 @@ cd "$SCRIPT_DIR"
 # 激活虚拟环境
 source "${SCRIPT_DIR}/.venv/bin/activate"
 
-# 环境变量（可被 ecosystem.config.js 的 env 覆盖）
+# 环境变量（.env 由 Python load_dotenv() 加载，此处不 source 避免含空格的值被误解析）
 export PORT="${PORT:-7999}"
 
 exec python main.py

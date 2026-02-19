@@ -31,6 +31,10 @@
 - **Tab URL 路由**: 每个 tab 独立 URL：`/control`、`/schedule`、`/history`，刷新不丢失当前 tab；根路径 `/` 自动替换为 `/control`
 - **start_server.sh**: 作为 PM2 的入口脚本（`pm2 start ecosystem.config.js` 时由 PM2 执行），负责激活 venv 并启动 `python main.py`
 - **scripts 整理**: introspect_schema.py、create_schedule.py 移至 scripts/；main_legacy.py 删除；test_unit.py 移至 archive/
+- **Status API 容错**: 各服务调用加 try/except，单设备不可达时返回 200 + 该设备 error 字段
+- **Hue 服务容错**: get_status/turn_on/turn_off/toggle/set_timer 捕获 OSError，离线时返回友好错误；前端 toggleHue 检查 response.status
+- **load_dotenv**: main.py 显式指定 `Path(__file__).parent / ".env"`，确保 PM2 环境下正确加载
+- **start_server.sh**: 不 source .env（含空格的值如 `Baby room` 会被 shell 误解析为命令）
 
 ---
 
@@ -56,6 +60,15 @@
 ### FastAPI 静态文件 SPA
 - **问题**: React Router 需要 SPA fallback 到 index.html
 - **解决**: 在 main.py 中添加 catch-all 路由，优先检查静态文件，否则返回 index.html
+
+### .env 不要用 shell source
+- **问题**: `source .env` 时，`HUE_LIGHT_NAME=Baby room` 中的 `room` 会被解析为命令执行
+- **解决**: 由 Python load_dotenv() 加载；main.py 使用 `load_dotenv(Path(__file__).parent / ".env")` 显式路径
+
+### Status API 部分失败
+- **问题**: Hue/Wemo 等设备不可达时（如 No route to host），整个 /api/status 返回 500
+- **原因**: 聚合接口任一服务抛异常即整体失败
+- **解决**: 各服务调用加 try/except，失败时返回该服务的 error 字段，其他服务正常返回；前端 Hue 区显示「离线」状态
 
 ### Rinnai API 缓存问题
 - **问题**: aiorinnai 库可能缓存 API 连接，导致状态数据不更新

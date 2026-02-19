@@ -55,7 +55,12 @@ export function ControlTab() {
             <div>
               <div className="font-medium text-gray-900">{status?.hue?.name || '卧室灯'}</div>
               <div className="text-sm text-gray-500 mt-0.5">
-                {status?.hue?.is_on ? (
+                {status?.hue?.error ? (
+                  <span className="flex items-center text-amber-600">
+                    <span className="w-2 h-2 bg-amber-400 rounded-full mr-1.5"></span>
+                    离线 · {status.hue.error}
+                  </span>
+                ) : status?.hue?.is_on ? (
                   <span className="flex items-center">
                     <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
                     开启 · 亮度 {status.hue.brightness}

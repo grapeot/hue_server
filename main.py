@@ -18,7 +18,7 @@ from services.meross_service import meross_service
 from services.scheduler import init_scheduler, shutdown_scheduler
 from wemo_schedule import WemoScheduleManager
 
-load_dotenv()
+load_dotenv(Path(__file__).parent / ".env")
 
 logging.basicConfig(
     level=logging.INFO,
