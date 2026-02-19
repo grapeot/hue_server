@@ -45,6 +45,7 @@
 - **GitHub Actions**: `.github/workflows/test.yml` 在 push/PR 时跑后端 pytest、前端 Vitest
 - **前端测试**: 添加 Vitest + deviceStore 单元测试
 - **History 图表 Pacific Time**: 前端 formatPacificTime；API 对 SQLite UTC 时间戳补 Z 后缀，避免前端误解析为本地时间
+- **Hue 关灯时亮度记录 0**: 灯关着时 brightness 存 0 而非之前的亮度值（scheduler.py）
 
 ---
 

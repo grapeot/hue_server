@@ -22,9 +22,10 @@ async def collect_device_states():
     
     hue_status = hue_service.get_status()
     if "error" not in hue_status:
+        is_on = hue_status.get("is_on")
         save_device_state("hue", "baby_room", {
-            "is_on": hue_status.get("is_on"),
-            "brightness": hue_status.get("brightness")
+            "is_on": is_on,
+            "brightness": hue_status.get("brightness") if is_on else 0
         })
     
     wemo_status = wemo_service.get_all_status()
