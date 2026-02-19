@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { ControlTab } from './components/ControlTab';
+import { CamerasTab } from './components/CamerasTab';
 import { ScheduleTab } from './components/ScheduleTab';
 import { HistoryTab } from './components/HistoryTab';
 
-type Tab = 'control' | 'schedule' | 'history';
+type Tab = 'control' | 'cameras' | 'schedule' | 'history';
 
 const TAB_PATH: Record<Tab, string> = {
   control: '/control',
+  cameras: '/cameras',
   schedule: '/schedule',
   history: '/history',
 };
@@ -15,6 +17,10 @@ function getTabFromPath(pathname: string): Tab {
   const normalizedPath = pathname.endsWith('/') && pathname !== '/'
     ? pathname.slice(0, -1)
     : pathname;
+
+  if (normalizedPath === '/cameras') {
+    return 'cameras';
+  }
 
   if (normalizedPath === '/schedule') {
     return 'schedule';
@@ -57,6 +63,7 @@ function App() {
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: 'control', label: '设备控制', icon: '🎛️' },
+    { key: 'cameras', label: '监控预览', icon: '📷' },
     { key: 'schedule', label: '定时任务', icon: '⏰' },
     { key: 'history', label: '历史数据', icon: '📊' },
   ];
@@ -98,6 +105,7 @@ function App() {
       {/* Content */}
       <main className="max-w-2xl mx-auto px-4 py-4">
         {activeTab === 'control' && <ControlTab />}
+        {activeTab === 'cameras' && <CamerasTab />}
         {activeTab === 'schedule' && <ScheduleTab />}
         {activeTab === 'history' && <HistoryTab />}
       </main>
