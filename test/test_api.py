@@ -49,20 +49,6 @@ class TestHueEndpoints:
         
         response = client.get("/api/hue/on")
         assert response.status_code == 200
-    
-    @patch('services.hue_service.hue_service.set_timer')
-    def test_hue_timer(self, mock_set_timer):
-        mock_set_timer.return_value = {"status": "success", "minutes": 7}
-        
-        response = client.get("/api/hue/timer/7")
-        assert response.status_code == 200
-    
-    @patch('services.hue_service.hue_service.cancel_timer')
-    def test_hue_cancel(self, mock_cancel_timer):
-        mock_cancel_timer.return_value = {"status": "success", "message": "Timer cancelled"}
-        
-        response = client.get("/api/hue/cancel")
-        assert response.status_code == 200
 
 
 class TestWemoEndpoints:

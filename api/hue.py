@@ -19,14 +19,6 @@ async def hue_on():
 async def hue_on_with_brightness(brightness: int):
     return hue_service.turn_on(brightness=brightness)
 
-@router.get("/timer/{minutes}")
-async def hue_timer(minutes: float, brightness: int = 10):
-    return hue_service.set_timer(minutes=minutes, brightness=brightness)
-
-@router.get("/cancel")
-async def hue_cancel():
-    return hue_service.cancel_timer()
-
 @router.get("/toggle")
 async def hue_toggle():
     return hue_service.toggle()

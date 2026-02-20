@@ -1,6 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
-import asyncio
+from unittest.mock import Mock, patch
 
 from services.hue_service import HueService
 
@@ -36,12 +35,3 @@ class TestHueService:
     def test_turn_on_no_bridge(self, hue_service):
         result = hue_service.turn_on(brightness=128)
         assert result["status"] == "error"
-    
-    def test_set_timer_no_bridge(self, hue_service):
-        result = hue_service.set_timer(7, brightness=10)
-        assert result["status"] == "error"
-    
-    def test_cancel_timer_no_active_timer(self, hue_service):
-        result = hue_service.cancel_timer()
-        assert result["status"] == "success"
-        assert "No active timer" in result["message"]
