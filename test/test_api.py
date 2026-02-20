@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, Mock
 
 from main import app
 
@@ -154,3 +154,76 @@ class TestHistoryEndpoint:
         data = response.json()
         assert len(data) == 1
         assert data[0]["timestamp"] == "2026-02-19T00:47:05Z"
+
+
+class TestScheduleEndpoints:
+    
+    def test_create_action(self):
+        with patch('api.schedule.dynamic_scheduler.schedule') as mock_schedule:
+            mock_action = Mock()
+            mock_action.to_dict.return_value = {
+                'id': 'test123',
+                'action': {'type': 'wemo.off', 'params': {'device': 'tree'}},
+                'action_display': '关闭 tree',
+                'minutes': 5,
+                'created_at': '2026-02-19T12:00:00',
+                'execute_at': '2026-02-19T12:05:00',
+                'status': 'pending',
+            }
+            mock_schedule.return_value = mock_action
+            
+            response = client.post("/api/schedule/actions", json={
+                "minutes": 5,
+                "action": {"type": "wemo.off", "params": {"device": "tree"}}
+            })
+            assert response.status_code == 200
+            data = response.json()
+            assert data["action"]["type"] == "wemo.off"
+            assert data["minutes"] == 5
+            assert data["status"] == "pending"
+    
+    def test_create_action_invalid_minutes(self):
+        response = client.post("/api/schedule/actions", json={
+            "minutes": 0,
+            "action": {"type": "wemo.off", "params": {}}
+        })
+        assert response.status_code == 400
+    
+    def test_list_actions(self):
+        with patch('api.schedule.dynamic_scheduler.get_all') as mock_get_all:
+            mock_get_all.return_value = []
+            
+            response = client.get("/api/schedule/actions")
+            assert response.status_code == 200
+            data = response.json()
+            assert "actions" in data
+    
+    def test_list_actions_with_status_filter(self):
+        with patch('api.schedule.dynamic_scheduler.get_all') as mock_get_all:
+            mock_get_all.return_value = []
+            
+            response = client.get("/api/schedule/actions?status=pending")
+            assert response.status_code == 200
+            data = response.json()
+            assert "actions" in data
+    
+    def test_cancel_action(self):
+        with patch('api.schedule.dynamic_scheduler.cancel') as mock_cancel:
+            mock_action = Mock()
+            mock_action.to_dict.return_value = {
+                'id': 'test123',
+                'status': 'cancelled',
+            }
+            mock_cancel.return_value = mock_action
+            
+            response = client.delete("/api/schedule/actions/test123")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "cancelled"
+    
+    def test_cancel_nonexistent_action(self):
+        with patch('api.schedule.dynamic_scheduler.cancel') as mock_cancel:
+            mock_cancel.return_value = None
+            
+            response = client.delete("/api/schedule/actions/nonexistent")
+            assert response.status_code == 404

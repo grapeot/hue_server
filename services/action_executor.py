@@ -20,8 +20,8 @@ def get_action_display(action_type: str, params: dict) -> str:
     template = ACTION_DISPLAY_NAMES.get(action_type, action_type)
     try:
         return template.format(**params)
-    except KeyError:
-        return template
+    except (KeyError, ValueError):
+        return action_type
 
 
 class ActionExecutor:
