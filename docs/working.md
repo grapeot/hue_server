@@ -4,6 +4,16 @@
 
 ### 2026-02-19
 
+- **通用定时任务系统**: 支持自然语言驱动的延迟执行
+  - PRD/RFC: `docs/scheduling_system.md`
+  - 后端: `services/action_executor.py` + `services/dynamic_scheduler.py` + `api/schedule.py`
+  - API: `POST/GET/DELETE /api/schedule/actions`
+  - 动作类型: hue.toggle/on/off, wemo.toggle/on/off, rinnai.circulate, garage.toggle
+  - 内存存储（不持久化），服务重启丢失
+- **前端动态任务展示**: Schedule Tab 显示待执行的动态任务
+  - `useScheduledActions.ts` hook
+  - 显示执行时间、动作描述、取消按钮
+- **测试覆盖**: `test/test_action_executor.py`, `test/test_dynamic_scheduler.py`
 - **Cameras 监控功能**: 新增 Tab 2 监控预览
   - 后端: `services/camera_service.py` + `api/cameras.py`
   - 异步proxy快照 (httpx + DigestAuth)，不落盘、不缓存
