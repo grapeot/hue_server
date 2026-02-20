@@ -273,15 +273,23 @@
 
 #### 2.4.2 数据采集规格
 
-**采集频率**: 每 30 分钟
+**采集机制**: 双重采集策略
+
+| 机制 | 频率/触发 | 采集范围 | 说明 |
+|-----|----------|---------|------|
+| 定时采集 | 每 30 分钟 | 所有设备 | 基础覆盖 |
+| 控制后采集 | 控制操作后 3-10 秒 | 单个设备 | 补充覆盖，记录状态变化 |
 
 **采集内容**:
 
-| 设备 | 字段 |
-|-----|------|
-| Hue | name, is_on, brightness |
-| Wemo | name, is_on |
-| Rinnai | set_temperature, inlet_temp, outlet_temp, water_flow, is_circulating |
+| 设备 | 字段 | 控制后延迟 |
+|-----|------|----------|
+| Hue | name, is_on, brightness | 3 秒 |
+| Wemo | name, is_on | 3 秒 |
+| Rinnai | set_temperature, inlet_temp, outlet_temp, water_flow, is_circulating | 10 秒 |
+| Garage | 无（无传感器） | - |
+
+详细设计见 `docs/post_action_collection.md`。
 
 #### 2.4.3 可视化规格
 

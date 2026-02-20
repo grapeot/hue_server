@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from services.wemo_service import wemo_service
+from services.post_action_collector import schedule_collection
 
 router = APIRouter(prefix="/api/wemo", tags=["wemo"])
 
@@ -9,12 +10,18 @@ async def get_wemo_status():
 
 @router.get("/{device_name}/toggle")
 async def wemo_toggle(device_name: str):
-    return wemo_service.toggle(device_name)
+    result = wemo_service.toggle(device_name)
+    await schedule_collection("wemo", device_name)
+    return result
 
 @router.get("/{device_name}/on")
 async def wemo_on(device_name: str):
-    return wemo_service.turn_on(device_name)
+    result = wemo_service.turn_on(device_name)
+    await schedule_collection("wemo", device_name)
+    return result
 
 @router.get("/{device_name}/off")
 async def wemo_off(device_name: str):
-    return wemo_service.turn_off(device_name)
+    result = wemo_service.turn_off(device_name)
+    await schedule_collection("wemo", device_name)
+    return result

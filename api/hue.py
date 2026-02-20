@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from services.hue_service import hue_service
+from services.post_action_collector import schedule_collection
 
 router = APIRouter(prefix="/api/hue", tags=["hue"])
 
@@ -9,16 +10,24 @@ async def get_hue_status():
 
 @router.get("/off")
 async def hue_off():
-    return hue_service.turn_off()
+    result = hue_service.turn_off()
+    await schedule_collection("hue", "baby_room")
+    return result
 
 @router.get("/on")
 async def hue_on():
-    return hue_service.turn_on(brightness=128)
+    result = hue_service.turn_on(brightness=128)
+    await schedule_collection("hue", "baby_room")
+    return result
 
 @router.get("/on/{brightness}")
 async def hue_on_with_brightness(brightness: int):
-    return hue_service.turn_on(brightness=brightness)
+    result = hue_service.turn_on(brightness=brightness)
+    await schedule_collection("hue", "baby_room")
+    return result
 
 @router.get("/toggle")
 async def hue_toggle():
-    return hue_service.toggle()
+    result = hue_service.toggle()
+    await schedule_collection("hue", "baby_room")
+    return result

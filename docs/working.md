@@ -2,6 +2,16 @@
 
 ## Changelog
 
+### 2026-02-20
+
+- **控制后延迟采集系统**: API 控制设备后自动延迟采集状态并存库
+  - PRD/RFC: `docs/post_action_collection.md`
+  - 后端: `services/post_action_collector.py`
+  - 采集延迟: Hue/Wemo 3秒，Rinnai 10秒
+  - 与现有 30 分钟定时采集互补，提供更完整的历史数据
+  - 前端 10 秒延迟保持不变（只更新 UI，不写入数据库）
+  - 测试覆盖: `test/test_post_action_collector.py`
+
 ### 2026-02-19
 
 - **通用定时任务系统**: 支持自然语言驱动的延迟执行

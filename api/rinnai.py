@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter
 from services.rinnai_service import rinnai_service
+from services.post_action_collector import schedule_collection
 
 router = APIRouter(prefix="/api/rinnai", tags=["rinnai"])
 logger = logging.getLogger(__name__)
@@ -24,7 +25,9 @@ async def refresh_rinnai_status(wait_seconds: float = 5.0):
 
 @router.get("/circulate")
 async def rinnai_circulate(duration: int = 5):
-    return await rinnai_service.start_circulation(duration)
+    result = await rinnai_service.start_circulation(duration)
+    await schedule_collection("rinnai", "main_house")
+    return result
 
 @router.get("/schedules")
 async def get_rinnai_schedules():
