@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 import uvicorn
 
-from api import hue, wemo, rinnai, garage, status, history, cameras
+from api import hue, wemo, rinnai, garage, status, history, cameras, schedule
 from services.hue_service import hue_service
 from services.wemo_service import wemo_service
 from services.rinnai_service import rinnai_service
@@ -18,6 +18,7 @@ from services.meross_service import meross_service
 from services.camera_service import camera_service
 from services.scheduler import init_scheduler, shutdown_scheduler
 from services.wemo_schedule import WemoScheduleManager
+from services.action_executor import init_action_executor
 
 load_dotenv(Path(__file__).parent / ".env")
 
@@ -44,6 +45,7 @@ app.include_router(garage.router)
 app.include_router(status.router)
 app.include_router(history.router)
 app.include_router(cameras.router)
+app.include_router(schedule.router)
 
 wemo_schedule_manager = None
 
@@ -71,6 +73,8 @@ async def startup_event():
         logger.warning("Camera credentials not configured, camera feature disabled")
     
     init_scheduler()
+    
+    init_action_executor()
     
     wemo_schedule_manager = WemoScheduleManager("config/wemo_config.yaml")
     for name, device in wemo_service.devices.items():
