@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useScheduledActions } from '../hooks/useScheduledActions';
 
 interface RinnaiSchedule {
   id: string;
@@ -29,10 +30,22 @@ export function ScheduleTab() {
   const [rinnaiSchedules, setRinnaiSchedules] = useState<RinnaiSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { actions: dynamicActions, loading: dynamicLoading, cancelAction } = useScheduledActions();
 
   useEffect(() => {
     fetchRinnaiSchedules();
   }, []);
+
+  const formatExecuteTime = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleCancelAction = async (actionId: string) => {
+    if (confirm('确定要取消这个任务吗？')) {
+      await cancelAction(actionId);
+    }
+  };
 
   const fetchRinnaiSchedules = async () => {
     try {
@@ -68,6 +81,52 @@ export function ScheduleTab() {
 
   return (
     <div className="space-y-4">
+      {/* 动态任务 */}
+      <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-4 py-3 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-800 flex items-center">
+            <span className="text-xl mr-2">⏰</span>
+            动态任务
+            {dynamicActions.length > 0 && (
+              <span className="ml-2 text-xs font-normal text-gray-500">
+                （{dynamicActions.length} 个待执行）
+              </span>
+            )}
+          </h2>
+        </div>
+        {dynamicLoading ? (
+          <div className="p-4 text-gray-500 text-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500 mx-auto"></div>
+          </div>
+        ) : dynamicActions.length === 0 ? (
+          <div className="p-4 text-gray-500 text-center">暂无待执行的动态任务</div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {dynamicActions.map((action) => (
+              <div key={action.id} className="flex items-center justify-between px-4 py-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                      {formatExecuteTime(action.execute_at)}
+                    </span>
+                    <span className="font-medium text-gray-900">{action.action_display}</span>
+                    <span className="text-xs text-gray-400">
+                      ({action.minutes} 分钟后)
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleCancelAction(action.id)}
+                  className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                >
+                  取消
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* 灯光定时 */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-gray-100">
