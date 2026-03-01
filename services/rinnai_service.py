@@ -52,6 +52,14 @@ class RinnaiService:
             logger.error("RINNAI_USERNAME or RINNAI_PASSWORD not set")
             return False
 
+        if self.api:
+            try:
+                await self.api.close()
+            except Exception:
+                pass
+            self.api = None
+            self._connected = False
+
         try:
             from aiorinnai import API
 
@@ -112,7 +120,15 @@ class RinnaiService:
         try:
             return await operation()
         except Exception as exc:
-            logger.warning(f"Rinnai operation failed, reconnecting: {exc}")
+            error_str = str(exc).lower()
+            is_auth_error = "401" in error_str or "unauthorized" in error_str
+            if is_auth_error:
+                logger.warning(f"Rinnai auth error, forcing full reconnect: {exc}")
+                self._connected = False
+                self.api = None
+            else:
+                logger.warning(f"Rinnai operation failed, reconnecting: {exc}")
+
             if await self.connect():
                 try:
                     return await operation()
@@ -158,6 +174,24 @@ class RinnaiService:
         shadow = data.get("shadow", {}) or {}
         sensor = data.get("info", {}) or {}
 
+        # 解析设备时间
+        unix_time_raw = sensor.get("unix_time")
+        device_time = None
+        device_time_pacific = None
+        if unix_time_raw:
+            try:
+                unix_time = int(unix_time_raw)
+                from datetime import datetime, timezone as tz
+                dt = datetime.fromtimestamp(unix_time, tz=tz.utc)
+                device_time = dt.isoformat()
+                # 转换为太平洋时间
+                import pytz
+                pacific = pytz.timezone('America/Los_Angeles')
+                dt_pacific = dt.astimezone(pacific)
+                device_time_pacific = dt_pacific.strftime('%Y-%m-%d %H:%M:%S %Z')
+            except (ValueError, TypeError):
+                pass
+
         return {
             "device_id": self.device_id,
             "name": data.get("device_name", "Unknown"),
@@ -168,7 +202,9 @@ class RinnaiService:
             "inlet_temp": self._to_int(sensor.get("m08_inlet_temperature", 0)),
             "outlet_temp": self._to_int(sensor.get("m02_outlet_temperature", 0)),
             "water_flow": self._to_int(sensor.get("m01_water_flow_rate_raw", 0)),
-            "firmware": data.get("firmware", "unknown")
+            "firmware": data.get("firmware", "unknown"),
+            "device_time": device_time,
+            "device_time_pacific": device_time_pacific,
         }
 
     async def get_status(self, trigger_maintenance: bool = False) -> dict:
