@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDeviceStore } from '../stores/deviceStore';
 
 export function ControlTab() {
-  const { status, loading, error, fetchStatus, toggleHue, toggleWemo, circulateRinnai, refreshRinnai, toggleGarage } = useDeviceStore();
+  const { status, loading, error, fetchStatus, toggleHue, setHueBrightness, toggleWemo, circulateRinnai, refreshRinnai, toggleGarage } = useDeviceStore();
 
   useEffect(() => {
     fetchStatus();
@@ -97,6 +97,26 @@ export function ControlTab() {
               />
             </button>
           </div>
+          {status?.hue?.is_on && !status?.hue?.error && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                亮度调节
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="254"
+                value={status.hue.brightness || 128}
+                onChange={(e) => setHueBrightness(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>暗</span>
+                <span className="font-medium text-gray-700">{status.hue.brightness || 128}</span>
+                <span>亮</span>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
