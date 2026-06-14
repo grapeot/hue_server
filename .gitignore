@@ -24,6 +24,7 @@ wheels/
 ref_*
 
 # Virtual Environment
+.venv/
 py310/
 venv/
 ENV/

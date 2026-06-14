@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Optional
 
@@ -84,7 +85,7 @@ async def get_all_status(
                     logger.warning(f"Failed to save Rinnai state to DB: {e}")
 
     if "wemo" in requested:
-        result["wemo"] = _safe_wemo_status()
+        result["wemo"] = await asyncio.to_thread(_safe_wemo_status)
 
     if "garage" in requested:
         result["garage"] = _safe_garage_status()
