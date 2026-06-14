@@ -9,6 +9,7 @@ interface DeviceStore {
   error: string | null;
   fetchStatus: (devices?: DeviceKey[]) => Promise<void>;
   toggleHue: () => Promise<void>;
+  setHueBrightness: (brightness: number) => Promise<void>;
   toggleWemo: (name: string) => Promise<void>;
   circulateRinnai: (duration?: number) => Promise<void>;
   refreshRinnai: () => Promise<void>;
@@ -43,6 +44,19 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.status === 'error') {
         throw new Error(data.message || 'Failed to toggle Hue');
+      }
+      await get().fetchStatus(['hue']);
+    } catch (error) {
+      set({ error: String(error) });
+    }
+  },
+
+  setHueBrightness: async (brightness: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/hue/on/${brightness}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.status === 'error') {
+        throw new Error(data.message || 'Failed to set Hue brightness');
       }
       await get().fetchStatus(['hue']);
     } catch (error) {
