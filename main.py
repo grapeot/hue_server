@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -28,7 +29,57 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Smart Home Dashboard", version="2.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting Smart Home Dashboard...")
+    hue_ip = os.getenv("HUE_BRIDGE_IP")
+    logger.info(f"Debug: HUE_BRIDGE_IP={hue_ip or '(未配置)'}, .env exists={Path(__file__).parent.joinpath('.env').exists()}")
+    hue_service.connect()
+
+    wemo_service.init_devices()
+
+    await rinnai_service.connect()
+
+    await meross_service.connect()
+
+    camera_user = os.getenv("CAMERA_USER")
+    camera_password = os.getenv("CAMERA_PASSWORD")
+    if camera_user and camera_password:
+        camera_service.set_credentials(camera_user, camera_password)
+        camera_service.load_config()
+    else:
+        logger.warning("Camera credentials not configured, camera feature disabled")
+
+    init_scheduler()
+
+    init_action_executor()
+
+    wemo_schedule_manager = WemoScheduleManager("config/wemo_config.yaml")
+    for name, device in wemo_service.devices.items():
+        wemo_schedule_manager.register_device(name, device)
+    wemo_schedule_manager.start()
+
+    logger.info("Smart Home Dashboard started")
+
+    yield
+
+    logger.info("Shutting down Smart Home Dashboard...")
+
+    shutdown_scheduler()
+
+    if wemo_schedule_manager:
+        wemo_schedule_manager.stop()
+
+    await camera_service.close()
+
+    await rinnai_service.close()
+    await meross_service.close()
+
+    logger.info("Smart Home Dashboard shutdown complete")
+
+
+app = FastAPI(title="Smart Home Dashboard", version="2.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,60 +97,6 @@ app.include_router(status.router)
 app.include_router(history.router)
 app.include_router(cameras.router)
 app.include_router(schedule.router)
-
-wemo_schedule_manager = None
-
-@app.on_event("startup")
-async def startup_event():
-    global wemo_schedule_manager
-    
-    logger.info("Starting Smart Home Dashboard...")
-    hue_ip = os.getenv("HUE_BRIDGE_IP")
-    logger.info(f"Debug: HUE_BRIDGE_IP={hue_ip or '(未配置)'}, .env exists={Path(__file__).parent.joinpath('.env').exists()}")
-    hue_service.connect()
-    
-    wemo_service.init_devices()
-    
-    await rinnai_service.connect()
-    
-    await meross_service.connect()
-    
-    camera_user = os.getenv("CAMERA_USER")
-    camera_password = os.getenv("CAMERA_PASSWORD")
-    if camera_user and camera_password:
-        camera_service.set_credentials(camera_user, camera_password)
-        camera_service.load_config()
-    else:
-        logger.warning("Camera credentials not configured, camera feature disabled")
-    
-    init_scheduler()
-    
-    init_action_executor()
-    
-    wemo_schedule_manager = WemoScheduleManager("config/wemo_config.yaml")
-    for name, device in wemo_service.devices.items():
-        wemo_schedule_manager.register_device(name, device)
-    wemo_schedule_manager.start()
-    
-    logger.info("Smart Home Dashboard started")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    global wemo_schedule_manager
-    
-    logger.info("Shutting down Smart Home Dashboard...")
-    
-    shutdown_scheduler()
-    
-    if wemo_schedule_manager:
-        wemo_schedule_manager.stop()
-    
-    await camera_service.close()
-    
-    await rinnai_service.close()
-    await meross_service.close()
-    
-    logger.info("Smart Home Dashboard shutdown complete")
 
 @app.get("/health")
 async def health_check():
