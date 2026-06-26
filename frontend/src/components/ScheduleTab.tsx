@@ -10,20 +10,20 @@ interface RinnaiSchedule {
 }
 
 const HUE_SCHEDULE = [
-  { time: '20:00', action: 'on', brightness: 128, description: '开灯，亮度 128' },
-  { time: '08:20', action: 'off', description: '关灯' },
+  { time: '20:00', action: 'on', brightness: 128, description: 'Turn on, brightness 128' },
+  { time: '08:20', action: 'off', description: 'Turn off' },
 ];
 
 const WEMO_SCHEDULE = [
-  { device: 'Coffee', time: '07:45', action: 'on', description: '开启咖啡机' },
-  { device: 'Coffee', time: '11:00', action: 'off', description: '关闭咖啡机' },
+  { device: 'Coffee', time: '07:45', action: 'on', description: 'Turn on coffee maker' },
+  { device: 'Coffee', time: '11:00', action: 'off', description: 'Turn off coffee maker' },
 ];
 
 const WEMO_NAMES: Record<string, string> = {
-  'Coffee': '咖啡机',
-  'Veggie': '蔬菜灯',
-  'Tree': '圣诞树',
-  'Bedroom Light': '卧室灯',
+  'Coffee': 'Coffee maker',
+  'Veggie': 'Plant light',
+  'Tree': 'Tree light',
+  'Bedroom Light': 'Bedroom light',
 };
 
 export function ScheduleTab() {
@@ -42,7 +42,7 @@ export function ScheduleTab() {
   };
 
   const handleCancelAction = async (actionId: string) => {
-    if (confirm('确定要取消这个任务吗？')) {
+    if (confirm('Cancel this scheduled action?')) {
       await cancelAction(actionId);
     }
   };
@@ -54,19 +54,19 @@ export function ScheduleTab() {
         const data = await res.json();
         setRinnaiSchedules(data);
       } else {
-        setError('加载失败');
+        setError('Failed to load');
       }
     } catch (err) {
       console.error('Failed to fetch Rinnai schedules:', err);
-      setError('加载失败');
+      setError('Failed to load');
     } finally {
       setLoading(false);
     }
   };
 
   const parseDays = (days: string[]) => {
-    if (!days || days.length === 0) return '每天';
-    if (days[0].includes('0=Su') && days[0].includes('6=S')) return '每天';
+    if (!days || days.length === 0) return 'Daily';
+    if (days[0].includes('0=Su') && days[0].includes('6=S')) return 'Daily';
     return days.join(', ');
   };
 
@@ -81,15 +81,15 @@ export function ScheduleTab() {
 
   return (
     <div className="space-y-4">
-      {/* 动态任务 */}
+      {/* Dynamic tasks */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800 flex items-center">
             <span className="text-xl mr-2">⏰</span>
-            动态任务
+            Dynamic tasks
             {dynamicActions.length > 0 && (
               <span className="ml-2 text-xs font-normal text-gray-500">
-                （{dynamicActions.length} 个待执行）
+                ({dynamicActions.length} pending)
               </span>
             )}
           </h2>
@@ -99,7 +99,7 @@ export function ScheduleTab() {
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500 mx-auto"></div>
           </div>
         ) : dynamicActions.length === 0 ? (
-          <div className="p-4 text-gray-500 text-center">暂无待执行的动态任务</div>
+          <div className="p-4 text-gray-500 text-center">No pending dynamic tasks</div>
         ) : (
           <div className="divide-y divide-gray-50">
             {dynamicActions.map((action) => (
@@ -111,7 +111,7 @@ export function ScheduleTab() {
                     </span>
                     <span className="font-medium text-gray-900">{action.action_display}</span>
                     <span className="text-xs text-gray-400">
-                      ({action.minutes} 分钟后)
+                      (in {action.minutes} min)
                     </span>
                   </div>
                 </div>
@@ -119,7 +119,7 @@ export function ScheduleTab() {
                   onClick={() => handleCancelAction(action.id)}
                   className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
                 >
-                  取消
+                  Cancel
                 </button>
               </div>
             ))}
@@ -127,12 +127,12 @@ export function ScheduleTab() {
         )}
       </section>
 
-      {/* 灯光定时 */}
+      {/* Light schedule */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800 flex items-center">
             <span className="text-xl mr-2">💡</span>
-            灯光定时任务
+            Light schedule
           </h2>
         </div>
         <div className="divide-y divide-gray-50">
@@ -146,18 +146,18 @@ export function ScheduleTab() {
                   <span className="font-medium text-gray-900">{schedule.description}</span>
                 </div>
               </div>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">每天</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Daily</span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 开关定时 */}
+      {/* Switch schedule */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-teal-50 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800 flex items-center">
             <span className="text-xl mr-2">🔌</span>
-            开关定时任务
+            Switch schedule
           </h2>
         </div>
         <div className="divide-y divide-gray-50">
@@ -174,19 +174,19 @@ export function ScheduleTab() {
                   <span className="text-sm text-gray-500">{schedule.description}</span>
                 </div>
               </div>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">每天</span>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Daily</span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 热水器定时 */}
+      {/* Water heater schedule */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800 flex items-center">
             <span className="text-xl mr-2">🚿</span>
-            热水器定时任务
-            <span className="ml-2 text-xs font-normal text-gray-500">（来自设备）</span>
+            Water heater schedule
+            <span className="ml-2 text-xs font-normal text-gray-500">(from device)</span>
           </h2>
         </div>
         {loading ? (
@@ -196,7 +196,7 @@ export function ScheduleTab() {
         ) : error ? (
           <div className="p-4 text-red-500 text-center">{error}</div>
         ) : rinnaiSchedules.length === 0 ? (
-          <div className="p-4 text-gray-500 text-center">无定时任务</div>
+          <div className="p-4 text-gray-500 text-center">No schedules</div>
         ) : (
           <div className="divide-y divide-gray-50">
             {rinnaiSchedules.map((schedule) => (

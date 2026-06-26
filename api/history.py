@@ -1,19 +1,19 @@
 import json
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from models.database import get_device_history
+from models.schemas import HistoryRecord
 
 router = APIRouter(tags=["history"])
 
 def _ensure_utc_timestamp(ts: str) -> str:
-    """SQLite 存的是 UTC 但无时区后缀，补上 Z 让前端正确解析为 UTC"""
+    """SQLite stores UTC timestamps without a suffix; add Z for frontend parsing."""
     if not ts or ('Z' in ts or '+' in ts):
         return ts
     return ts.replace(' ', 'T', 1) + 'Z'
 
 
-@router.get("/api/history")
-async def get_history(hours: int = 24):
-    hours = max(1, min(168, hours))  # 限制 1–168 小时（7 天）
+@router.get("/api/history", response_model=list[HistoryRecord], summary="Get recent device history")
+async def get_history(hours: int = Query(24, ge=1, le=168)):
     history = get_device_history(hours=hours)
     
     for record in history:

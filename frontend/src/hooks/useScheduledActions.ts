@@ -30,11 +30,11 @@ export function useScheduledActions() {
         setActions(data.actions);
         setError(null);
       } else {
-        setError('加载失败');
+        setError('Failed to load');
       }
     } catch (err) {
       console.error('Failed to fetch scheduled actions:', err);
-      setError('加载失败');
+      setError('Failed to load');
     } finally {
       setLoading(false);
     }

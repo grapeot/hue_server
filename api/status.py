@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Query
+from models.schemas import AllStatusResponse
 from services.hue_service import hue_service
 from services.wemo_service import wemo_service
 from services.rinnai_service import rinnai_service
@@ -55,7 +56,12 @@ def _safe_garage_status():
         return {"door_count": 0, "available": False}
 
 
-@router.get("/api/status")
+@router.get(
+    "/api/status",
+    response_model=AllStatusResponse,
+    response_model_exclude_none=True,
+    summary="Get aggregate device status",
+)
 async def get_all_status(
     devices: Optional[str] = Query(None, description="Comma-separated: hue,wemo,rinnai,garage. Omit to fetch all."),
     rinnai_refresh: bool = Query(False, description="Trigger Rinnai maintenance before fetching"),

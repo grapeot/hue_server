@@ -7,15 +7,15 @@ from pathlib import Path
 from typing import Dict, Any
 from dotenv import load_dotenv
 
-# 添加项目根目录到路径（如果需要）
+# Add project root to path if needed.
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-# 加载环境变量
+# Load environment variables.
 load_dotenv()
 
-# 配置日志
+# Configure logging.
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -23,13 +23,13 @@ PORT = int(os.getenv("PORT", "8000"))
 BASE_URL = f"http://localhost:{PORT}"
 
 def save_light_state() -> Dict[str, Any]:
-    """保存当前灯的状态"""
+    """Save the current light state."""
     response = requests.get(f"{BASE_URL}/status")
     response.raise_for_status()
     return response.json()["state"]
 
 def restore_light_state(state: Dict[str, Any]):
-    """恢复灯的状态"""
+    """Restore the light state."""
     response = requests.post(f"{BASE_URL}/state", json={
         "on": state["on"],
         "bri": state["bri"]
@@ -38,51 +38,51 @@ def restore_light_state(state: Dict[str, Any]):
     return response.json()
 
 def test_light_control():
-    """测试灯的控制功能"""
+    """Test light control."""
     try:
-        # 保存当前状态
+        # Save current state.
         logger.info("Saving current light state...")
         original_state = save_light_state()
         logger.info(f"Original state: {original_state}")
 
-        # 测试立即关闭（0分钟）
+        # Test immediate off.
         logger.info("Testing immediate turn off...")
         response = requests.get(f"{BASE_URL}/light/0")
         assert response.status_code == 200
         logger.info("Immediate turn off request successful")
 
-        # 等待1秒确保状态已更新
+        # Wait for state update.
         time.sleep(1)
         
-        # 检查灯是否确实关闭
+        # Check that the light is off.
         current_state = save_light_state()
         assert current_state["on"] is False
         logger.info("Immediate turn off verified")
 
-        # 测试2秒后关闭
+        # Test turn-off after two seconds.
         logger.info("Testing 2-second delay turn off...")
-        response = requests.get(f"{BASE_URL}/light/0.0333")  # 2秒 = 0.0333分钟
+        response = requests.get(f"{BASE_URL}/light/0.0333")  # 2 seconds = 0.0333 minutes
         assert response.status_code == 200
         logger.info("Light turned on successfully")
 
-        # 等待1秒检查灯是否打开
+        # Wait one second and check that the light is on.
         time.sleep(1)
         current_state = save_light_state()
         assert current_state["on"] is True, f"Light should be on, but state is {current_state}"
-        # 亮度可能不是立即更新的，只要灯是开启状态即可
+        # Brightness may lag; the on state is sufficient.
         logger.info(f"Light on state verified: {current_state}")
 
-        # 等待2秒检查灯是否关闭
+        # Wait two seconds and check that the light is off.
         time.sleep(2)
         current_state = save_light_state()
         assert current_state["on"] is False
         logger.info("Delayed turn off verified")
 
-        # 恢复原始状态
+        # Restore original state.
         logger.info("Restoring original state...")
         restore_light_state(original_state)
         
-        # 验证状态是否恢复
+        # Verify restoration.
         final_state = save_light_state()
         assert final_state["on"] == original_state["on"]
         assert final_state["bri"] == original_state["bri"]
@@ -95,7 +95,7 @@ def test_light_control():
         import traceback
         logger.error(f"Test failed: {str(e)}")
         logger.error(traceback.format_exc())
-        # 确保恢复原始状态
+        # Ensure original state is restored.
         try:
             restore_light_state(original_state)
             logger.info("Original state restored after error")

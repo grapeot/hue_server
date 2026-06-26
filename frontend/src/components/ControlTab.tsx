@@ -21,36 +21,36 @@ export function ControlTab() {
   if (error && !status) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
-        加载失败: {error}
+        Failed to load: {error}
       </div>
     );
   }
 
   const wemoDevices = status?.wemo ? Object.entries(status.wemo) : [];
   const wemoNames: Record<string, string> = {
-    'coffee': '咖啡机',
-    'veggie': '蔬菜灯',
-    'tree': '圣诞树',
-    'bedroom light': '卧室灯',
+    'coffee': 'Coffee maker',
+    'veggie': 'Plant light',
+    'tree': 'Tree light',
+    'bedroom light': 'Bedroom light',
   };
 
   return (
     <div className="space-y-4">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 font-medium">
-          ⚠️ 操作失败: {error}
+          ⚠️ Action failed: {error}
         </div>
       )}
 
-      {/* 灯光 */}
+      {/* Lights */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800 flex items-center">
             <span className="text-xl mr-2">💡</span>
-            灯光控制
+            Lights
             {status?.hue?.error && (
               <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                离线
+                Offline
               </span>
             )}
           </h2>
@@ -63,7 +63,7 @@ export function ControlTab() {
           )}
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-gray-900">{status?.hue?.name || '卧室灯'}</div>
+              <div className="font-medium text-gray-900">{status?.hue?.name || 'Light'}</div>
               <div className="text-sm text-gray-500 mt-0.5">
                 {status?.hue?.error ? (
                   <span className="flex items-center text-amber-600">
@@ -73,13 +73,13 @@ export function ControlTab() {
                 ) : status?.hue?.is_on ? (
                   <span className="flex items-center">
                     <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
-                    开启 · 亮度 {status.hue.brightness}
-                    {status?.hue?.timer_active && <span className="ml-2 text-blue-500">⏱ 定时中</span>}
+                    On · brightness {status.hue.brightness}
+                    {status?.hue?.timer_active && <span className="ml-2 text-blue-500">⏱ Timer active</span>}
                   </span>
                 ) : (
                   <span className="flex items-center">
                     <span className="w-2 h-2 bg-gray-300 rounded-full mr-1.5"></span>
-                    关闭
+                    Off
                   </span>
                 )}
               </div>
@@ -100,7 +100,7 @@ export function ControlTab() {
           {status?.hue?.is_on && !status?.hue?.error && (
             <div className="mt-3 pt-3 border-t border-gray-100">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                亮度调节
+                Brightness
               </label>
               <input
                 type="range"
@@ -111,21 +111,21 @@ export function ControlTab() {
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>暗</span>
+                <span>Dim</span>
                 <span className="font-medium text-gray-700">{status.hue.brightness || 128}</span>
-                <span>亮</span>
+                <span>Bright</span>
               </div>
             </div>
           )}
         </div>
       </section>
 
-      {/* 开关 */}
+      {/* Switches */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-teal-50 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800 flex items-center">
             <span className="text-xl mr-2">🔌</span>
-            智能开关
+            Switches
           </h2>
         </div>
         <div className="divide-y divide-gray-50">
@@ -134,7 +134,7 @@ export function ControlTab() {
               <div>
                 <div className="font-medium text-gray-900">{wemoNames[name] || name}</div>
                 <div className="text-sm text-gray-500">
-                  {device.is_on === null ? '状态未知' : device.is_on ? '开启' : '关闭'}
+                  {device.is_on === null ? 'Unknown' : device.is_on ? 'On' : 'Off'}
                 </div>
               </div>
               <button
@@ -154,37 +154,37 @@ export function ControlTab() {
         </div>
       </section>
 
-      {/* 热水器 */}
+      {/* Water heater */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800 flex items-center">
             <span className="text-xl mr-2">🚿</span>
-            热水器
+            Water heater
             <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
               status?.rinnai?.is_online ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
             }`}>
-              {status?.rinnai?.is_online ? '在线' : '离线'}
+              {status?.rinnai?.is_online ? 'Online' : 'Offline'}
             </span>
           </h2>
         </div>
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="bg-gray-50 rounded-lg px-3 py-2">
-              <div className="text-gray-500">设定温度</div>
+              <div className="text-gray-500">Set temperature</div>
               <div className="font-semibold text-gray-900">{status?.rinnai?.set_temperature}°F</div>
             </div>
             <div className="bg-gray-50 rounded-lg px-3 py-2">
-              <div className="text-gray-500">出水温度</div>
+              <div className="text-gray-500">Outlet temperature</div>
               <div className="font-semibold text-gray-900">{status?.rinnai?.outlet_temp}°F</div>
             </div>
             <div className="bg-gray-50 rounded-lg px-3 py-2">
-              <div className="text-gray-500">进水温度</div>
+              <div className="text-gray-500">Inlet temperature</div>
               <div className="font-semibold text-gray-900">{status?.rinnai?.inlet_temp}°F</div>
             </div>
             <div className="bg-gray-50 rounded-lg px-3 py-2">
-              <div className="text-gray-500">循环状态</div>
+              <div className="text-gray-500">Recirculation</div>
               <div className={`font-semibold ${status?.rinnai?.recirculation_enabled ? 'text-blue-600' : 'text-gray-900'}`}>
-                {status?.rinnai?.recirculation_enabled ? '运行中' : '停止'}
+                {status?.rinnai?.recirculation_enabled ? 'Running' : 'Stopped'}
               </div>
             </div>
           </div>
@@ -193,39 +193,39 @@ export function ControlTab() {
               onClick={() => circulateRinnai(5)}
               className="px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              触发 5 分钟循环
+              Run 5 min circulation
             </button>
             <button
               onClick={refreshRinnai}
               className="px-4 py-2.5 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
             >
-              维护刷新
+              Maintenance refresh
             </button>
           </div>
         </div>
       </section>
 
-      {/* 车库门 */}
+      {/* Garage doors */}
       {status?.garage?.available && (
         <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100">
             <h2 className="text-base font-semibold text-gray-800 flex items-center">
               <span className="text-xl mr-2">🚗</span>
-              车库门
+              Garage doors
             </h2>
           </div>
           <div className="divide-y divide-gray-50">
             {Array.from({ length: Math.min(status.garage.door_count, 2) }, (_, i) => (
               <div key={i + 1} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <div className="font-medium text-gray-900">车库门 {i + 1}</div>
-                  <div className="text-sm text-gray-500">点击触发开关</div>
+                  <div className="font-medium text-gray-900">Garage door {i + 1}</div>
+                  <div className="text-sm text-gray-500">Click to trigger toggle</div>
                 </div>
                 <button
                   onClick={() => toggleGarage(i + 1)}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
                 >
-                  触发
+                  Trigger
                 </button>
               </div>
             ))}

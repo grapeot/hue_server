@@ -1,45 +1,43 @@
-# Wemo 设备配置文件模板
-# 复制此文件为 wemo_config.yaml 并根据实际情况修改
+# Wemo device configuration template
+# Copy this file to wemo_config.yaml and fill in real local device addresses.
 #
-# 安全说明：本系统为内网专用。wemo_config.yaml 含真实设备 IP，请勿提交到 git。
-# 使用 scripts/refresh_wemo_devices.py 可自动发现设备并生成配置。
+# Safety note: wemo_config.yaml contains local network topology and must stay private.
+# scripts/refresh_wemo_devices.py can discover devices and generate a local config.
 
-# Wemo设备配置
-# 设备信息 hardcode，因为设备固定不变，无需频繁发现
 devices:
-  - name: "Coffee"
-    host: "192.168.x.x"
+  - name: "Kitchen Switch"
+    host: "192.0.2.20"
     port: 49153
     type: "Switch"
-    description: "咖啡机开关"  # 可选：设备描述
+    description: "Example kitchen switch"
 
-  - name: "Bedroom Light"
-    host: "192.168.x.x"
+  - name: "Desk Light"
+    host: "192.0.2.21"
     port: 49153
     type: "LightSwitchLongPress"
-    description: "卧室灯光"
+    description: "Example desk light"
 
-  - name: "Tree"
-    host: "192.168.x.x"
+  - name: "Accent Light"
+    host: "192.0.2.22"
     port: 49153
     type: "Insight"
-    description: "圣诞树灯光"
+    description: "Example insight switch"
 
-  - name: "Veggie"
-    host: "192.168.x.x"
+  - name: "Plant Light"
+    host: "192.0.2.23"
     port: 49153
     type: "Insight"
-    description: "蔬菜灯"
+    description: "Example plant light"
 
-# 定时任务配置
+# Optional local schedules
 schedule:
-  timezone: "Pacific"
+  timezone: "America/Los_Angeles"
   tasks:
-    - time: "07:45"
-      device: "Coffee"
+    - time: "08:00"
+      device: "Kitchen Switch"
       action: "on"
-      description: "早上开启咖啡机"
-    - time: "11:00"
-      device: "Coffee"
+      description: "Example morning on schedule"
+    - time: "10:00"
+      device: "Kitchen Switch"
       action: "off"
-      description: "中午关闭咖啡机"
+      description: "Example morning off schedule"

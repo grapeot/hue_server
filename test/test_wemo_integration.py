@@ -1,9 +1,9 @@
 """
-Wemo设备集成测试
-测试真实的Wemo设备控制功能
+Wemo integration tests.
+Tests real Wemo device control.
 
-默认跳过此测试（需要真实的设备和服务器运行）
-手动运行: python test/test_wemo_integration.py
+Skipped by default because it requires real devices and a running server.
+Manual run: python test/test_wemo_integration.py
 """
 
 import unittest
@@ -15,15 +15,15 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
-# 添加项目根目录到路径
+# Add project root to path.
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-# 加载环境变量
+# Load environment variables.
 load_dotenv()
 
-# 配置日志
+# Configure logging.
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -32,87 +32,87 @@ BASE_URL = f"http://localhost:{PORT}"
 
 
 class TestWemoIntegration(unittest.TestCase):
-    """Wemo设备集成测试"""
+    """Wemo integration tests."""
     
     @classmethod
     def setUpClass(cls):
-        """检查是否应该运行测试"""
+        """Check whether tests should run."""
         skip_tests = os.getenv("RUN_WEMO_TESTS", "false").lower() != "true"
         if skip_tests and __name__ != "__main__":
-            # 如果不是直接运行，默认跳过
+            # Skip by default unless explicitly enabled.
             raise unittest.SkipTest("Wemo integration tests skipped by default. Set RUN_WEMO_TESTS=true to run.")
     
     def setUp(self):
-        """测试前的设置"""
+        """Set up one test."""
         self.device_name = "Bedroom Light"
-        logger.info(f"准备测试设备: {self.device_name}")
+        logger.info(f"Preparing test device: {self.device_name}")
     
     def test_bedroom_light_control(self):
-        """测试Bedroom Light开关控制"""
+        """Test Bedroom Light switch control."""
         try:
-            # 1. 获取设备当前状态
-            logger.info("获取设备当前状态...")
+            # 1. Fetch current device state.
+            logger.info("Fetching current device state...")
             response = requests.get(f"{BASE_URL}/wemo/{self.device_name}/status")
-            self.assertEqual(response.status_code, 200, "应该能获取设备状态")
+            self.assertEqual(response.status_code, 200, "Should fetch device state")
             initial_state = response.json()
-            logger.info(f"初始状态: {initial_state}")
+            logger.info(f"Initial state: {initial_state}")
             
             initial_on = initial_state.get("state") == "on"
             
-            # 2. 开启设备
-            logger.info("开启设备...")
+            # 2. Turn device on.
+            logger.info("Turning device on...")
             response = requests.post(f"{BASE_URL}/wemo/{self.device_name}/on")
-            self.assertEqual(response.status_code, 200, "应该能开启设备")
+            self.assertEqual(response.status_code, 200, "Should turn device on")
             result = response.json()
-            logger.info(f"开启结果: {result}")
+            logger.info(f"Turn-on result: {result}")
             
-            # 等待1秒确保状态更新
+            # Wait for state update.
             time.sleep(1)
             
-            # 3. 验证设备已开启
-            logger.info("验证设备已开启...")
+            # 3. Verify device is on.
+            logger.info("Verifying device is on...")
             response = requests.get(f"{BASE_URL}/wemo/{self.device_name}/status")
             self.assertEqual(response.status_code, 200)
             current_state = response.json()
-            logger.info(f"开启后状态: {current_state}")
-            self.assertEqual(current_state.get("state"), "on", "设备应该已开启")
+            logger.info(f"State after turn-on: {current_state}")
+            self.assertEqual(current_state.get("state"), "on", "Device should be on")
             
-            # 4. 等待5秒
-            logger.info("等待5秒...")
+            # 4. Wait five seconds.
+            logger.info("Waiting five seconds...")
             time.sleep(5)
             
-            # 5. 关闭设备
-            logger.info("关闭设备...")
+            # 5. Turn device off.
+            logger.info("Turning device off...")
             response = requests.post(f"{BASE_URL}/wemo/{self.device_name}/off")
-            self.assertEqual(response.status_code, 200, "应该能关闭设备")
+            self.assertEqual(response.status_code, 200, "Should turn device off")
             result = response.json()
-            logger.info(f"关闭结果: {result}")
+            logger.info(f"Turn-off result: {result}")
             
-            # 等待1秒确保状态更新
+            # Wait for state update.
             time.sleep(1)
             
-            # 6. 验证设备已关闭
-            logger.info("验证设备已关闭...")
+            # 6. Verify device is off.
+            logger.info("Verifying device is off...")
             response = requests.get(f"{BASE_URL}/wemo/{self.device_name}/status")
             self.assertEqual(response.status_code, 200)
             final_state = response.json()
-            logger.info(f"关闭后状态: {final_state}")
-            self.assertEqual(final_state.get("state"), "off", "设备应该已关闭")
+            logger.info(f"State after turn-off: {final_state}")
+            self.assertEqual(final_state.get("state"), "off", "Device should be off")
             
-            logger.info("测试完成！所有步骤成功执行")
+            logger.info("Test complete. All steps succeeded.")
             
         except requests.exceptions.ConnectionError:
-            self.fail("无法连接到服务器。请确保服务器正在运行。")
+            self.fail("Could not connect to server. Ensure the server is running.")
         except Exception as e:
             import traceback
-            logger.error(f"测试失败: {str(e)}")
+            logger.error(f"Test failed: {str(e)}")
             logger.error(traceback.format_exc())
             raise
 
 
 if __name__ == "__main__":
-    # 如果直接运行此脚本，自动启用测试
+    # Enable tests automatically when this file is run directly.
     os.environ["RUN_WEMO_TESTS"] = "true"
-    logger.info("手动运行模式：启用Wemo集成测试")
+    logger.info("Manual run mode: enabling Wemo integration tests")
     
     unittest.main()

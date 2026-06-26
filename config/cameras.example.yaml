@@ -1,36 +1,36 @@
-# 摄像头配置示例
-# 复制此文件为 cameras.yaml 并填入实际 IP
-# 凭证通过 .env 文件配置 (CAMERA_USER, CAMERA_PASSWORD)
+# Camera configuration template
+# Copy this file to cameras.yaml and fill in real local device addresses.
+# Credentials come from .env (CAMERA_USER, CAMERA_PASSWORD).
 
 cameras:
-  - name: "Upstairs Patio"
-    id: "upstairs_patio"
+  - name: "Camera 1"
+    id: "camera_1"
     ip: "192.0.2.20"
-  
-  - name: "Frontyard"
-    id: "frontyard"
+
+  - name: "Camera 2"
+    id: "camera_2"
     ip: "192.0.2.21"
-  
-  - name: "Outer Patio"
-    id: "outer_patio"
+
+  - name: "Camera 3"
+    id: "camera_3"
     ip: "192.0.2.22"
-  
-  - name: "Backyard"
-    id: "backyard"
+
+  - name: "Camera 4"
+    id: "camera_4"
     ip: "192.0.2.23"
-  
-  - name: "Heat Pump Side Door"
-    id: "heat_pump_side_door"
+
+  - name: "Camera 5"
+    id: "camera_5"
     ip: "192.0.2.24"
-  
-  - name: "Downstairs Side Door"
-    id: "downstairs_side_door"
+
+  - name: "Camera 6"
+    id: "camera_6"
     ip: "192.0.2.25"
-  
-  - name: "Driveway"
-    id: "driveway"
+
+  - name: "Camera 7"
+    id: "camera_7"
     ip: "192.0.2.26"
-  
-  - name: "Babyroom"
-    id: "babyroom"
+
+  - name: "Camera 8"
+    id: "camera_8"
     ip: "192.0.2.27"

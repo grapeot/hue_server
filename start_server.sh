@@ -1,16 +1,16 @@
 #!/bin/bash
 # Smart Home Dashboard - process launcher entrypoint
-# 用法: 由 Background Process Manager / Process Launcher 调用
-# 此脚本负责激活环境并启动 Python 服务
+# Called by Background Process Manager / Process Launcher.
+# Activates the environment and starts the Python service.
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# 激活虚拟环境
+# Activate virtual environment.
 source "${SCRIPT_DIR}/.venv/bin/activate"
 
-# 环境变量（.env 由 Python load_dotenv() 加载，此处不 source 避免含空格的值被误解析）
+# Python load_dotenv() reads .env; do not source it because values may contain spaces.
 export PORT="${PORT:-7999}"
 
 RESEND_API_KEY_VALUE="$(python - <<'PY'

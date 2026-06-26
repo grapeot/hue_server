@@ -62,10 +62,10 @@ function App() {
   }, []);
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'control', label: '控制', icon: '🎛️' },
-    { key: 'cameras', label: '监控', icon: '📷' },
-    { key: 'schedule', label: '任务', icon: '⏰' },
-    { key: 'history', label: '历史', icon: '📊' },
+    { key: 'control', label: 'Control', icon: '🎛️' },
+    { key: 'cameras', label: 'Cameras', icon: '📷' },
+    { key: 'schedule', label: 'Tasks', icon: '⏰' },
+    { key: 'history', label: 'History', icon: '📊' },
   ];
 
   return (
@@ -75,7 +75,7 @@ function App() {
         <div className="max-w-2xl mx-auto px-4 py-4">
           <h1 className="text-lg font-bold text-gray-800 flex items-center">
             <span className="text-2xl mr-2">🏠</span>
-            智能家居控制面板
+            Smart Home Skill
           </h1>
         </div>
       </header>
@@ -112,7 +112,7 @@ function App() {
 
       {/* Footer */}
       <footer className="max-w-2xl mx-auto px-4 py-6 text-center text-xs text-gray-400">
-        智能家居系统 v2.0
+        Smart Home Skill v2.0
       </footer>
     </div>
   );

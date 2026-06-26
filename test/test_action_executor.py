@@ -6,27 +6,27 @@ class TestGetActionDisplay:
     
     def test_hue_toggle(self):
         result = get_action_display('hue.toggle', {})
-        assert result == '切换灯'
+        assert result == 'Toggle light'
     
     def test_hue_on(self):
         result = get_action_display('hue.on', {})
-        assert result == '开灯'
+        assert result == 'Turn light on'
     
     def test_hue_off(self):
         result = get_action_display('hue.off', {})
-        assert result == '关灯'
+        assert result == 'Turn light off'
     
     def test_wemo_off(self):
         result = get_action_display('wemo.off', {'device': 'tree'})
-        assert result == '关闭 tree'
+        assert result == 'Turn tree off'
     
     def test_wemo_on(self):
         result = get_action_display('wemo.on', {'device': 'coffee'})
-        assert result == '开启 coffee'
+        assert result == 'Turn coffee on'
     
     def test_rinnai_circulate(self):
         result = get_action_display('rinnai.circulate', {'duration': 5})
-        assert result == '触发热水器循环 5 分钟'
+        assert result == 'Run water heater circulation for 5 minutes'
     
     def test_unknown_action(self):
         result = get_action_display('unknown.action', {})

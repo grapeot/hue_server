@@ -1,7 +1,4 @@
-"""
-Wemo设备定时任务管理系统
-使用APScheduler进行任务调度，支持YAML配置文件
-"""
+"""Wemo scheduled task manager using APScheduler and YAML config."""
 
 import yaml
 import logging
@@ -18,67 +15,67 @@ logger = logging.getLogger(__name__)
 PACIFIC_TZ = pytz.timezone('America/Los_Angeles')
 
 class WemoScheduleManager:
-    """管理Wemo设备的定时任务，使用APScheduler"""
+    """Manage Wemo scheduled tasks with APScheduler."""
     
     def __init__(self, config_file: str = "config/wemo_config.yaml"):
         """
-        初始化定时任务管理器
+        Initialize the scheduled task manager.
         
         Args:
-            config_file: YAML配置文件路径（相对于项目根目录）
+            config_file: YAML config path relative to the project root.
         """
         self.config_file = config_file
-        self.devices: Dict[str, any] = {}  # 存储设备名称到设备对象的映射
+        self.devices: Dict[str, any] = {}
         self.scheduler: Optional[BackgroundScheduler] = None
         self.config: Optional[Dict] = None
         
     def register_device(self, name: str, device):
         """
-        注册一个Wemo设备
+        Register one Wemo device.
         
         Args:
-            name: 设备名称（用于配置文件中的引用）
-            device: pywemo设备对象
+            name: Device name used in config references.
+            device: pywemo device object.
         """
         self.devices[name.lower()] = device
-        logger.info(f"注册设备: {name}")
+        logger.info(f"Registered device: {name}")
     
     def load_config(self) -> Optional[Dict]:
         """
-        从YAML配置文件加载配置
+        Load the YAML config file.
         
         Returns:
-            配置字典，如果加载失败返回None
+            Config dict, or None if loading fails.
         """
         config_path = Path(self.config_file)
         
         if not config_path.exists():
-            logger.warning(f"配置文件不存在: {self.config_file}")
+            logger.warning(f"Config file does not exist: {self.config_file}")
             return None
         
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
-            logger.info(f"已加载配置文件: {self.config_file}")
+            logger.info(f"Loaded config file: {self.config_file}")
             return config
         except Exception as e:
-            logger.error(f"读取配置文件时出错: {str(e)}")
+            logger.error(f"Error reading config file: {str(e)}")
             import traceback
             traceback.print_exc()
             return None
     
     def execute_task(self, device_name: str, action: str):
         """
-        执行一个定时任务
+        Execute one scheduled task.
         
         Args:
-            device_name: 设备名称
-            action: 动作（on或off）
+            device_name: Device name.
+            action: Action, either on or off.
         """
         device_name_lower = device_name.lower()
         
         if device_name_lower not in self.devices:
-            logger.error(f"设备未注册: {device_name}")
+            logger.error(f"Device not registered: {device_name}")
             return
         
         device = self.devices[device_name_lower]
@@ -86,48 +83,48 @@ class WemoScheduleManager:
         try:
             if action == 'on':
                 device.on()
-                logger.info(f"定时任务执行: {device_name} 开启")
+                logger.info(f"Scheduled task executed: {device_name} on")
             elif action == 'off':
                 device.off()
-                logger.info(f"定时任务执行: {device_name} 关闭")
+                logger.info(f"Scheduled task executed: {device_name} off")
         except Exception as e:
-            logger.error(f"执行任务时出错 ({device_name} {action}): {str(e)}")
+            logger.error(f"Error executing task ({device_name} {action}): {str(e)}")
             import traceback
             traceback.print_exc()
     
     def start(self):
-        """启动定时任务调度器"""
+        """Start the scheduled task manager."""
         if self.scheduler and self.scheduler.running:
-            logger.warning("定时任务调度器已在运行")
+            logger.warning("Scheduled task manager is already running")
             return
         
-        # 加载配置文件
+        # Load config file.
         self.config = self.load_config()
         
         if not self.config:
-            logger.info("没有配置文件，跳过定时任务初始化")
+            logger.info("No config file, skipping scheduled task initialization")
             return
         
         schedule_config = self.config.get('schedule', {})
         tasks = schedule_config.get('tasks', [])
         
         if not tasks:
-            logger.info("没有定时任务需要执行")
+            logger.info("No scheduled tasks to run")
             return
         
-        # 获取时区
+        # Resolve timezone.
         timezone_str = schedule_config.get('timezone', 'Pacific')
         if timezone_str.lower() == 'pacific':
             timezone = PACIFIC_TZ
         elif timezone_str.lower() == 'utc':
             timezone = pytz.UTC
         else:
-            timezone = pytz.timezone('America/Los_Angeles')  # 默认Pacific
+            timezone = pytz.timezone('America/Los_Angeles')
         
-        # 创建调度器
+        # Create scheduler.
         self.scheduler = BackgroundScheduler(timezone=timezone)
         
-        # 添加任务
+        # Add tasks.
         for task in tasks:
             try:
                 time_str = task.get('time', '')
@@ -135,19 +132,19 @@ class WemoScheduleManager:
                 action = task.get('action', '')
                 
                 if not all([time_str, device_name, action]):
-                    logger.warning(f"任务配置不完整，跳过: {task}")
+                    logger.warning(f"Incomplete task config, skipping: {task}")
                     continue
                 
-                # 解析时间
+                # Parse time.
                 time_parts = time_str.split(':')
                 hour = int(time_parts[0])
                 minute = int(time_parts[1]) if len(time_parts) > 1 else 0
                 second = int(time_parts[2]) if len(time_parts) > 2 else 0
                 
-                # 创建任务ID
+                # Create task ID.
                 task_id = f"{device_name}_{action}_{time_str.replace(':', '')}"
                 
-                # 创建CronTrigger
+                # Create CronTrigger.
                 trigger = CronTrigger(
                     hour=hour,
                     minute=minute,
@@ -155,7 +152,7 @@ class WemoScheduleManager:
                     timezone=timezone
                 )
                 
-                # 添加任务
+                # Add task.
                 self.scheduler.add_job(
                     func=lambda d=device_name, a=action: self.execute_task(d, a),
                     trigger=trigger,
@@ -163,31 +160,31 @@ class WemoScheduleManager:
                     name=f"{device_name} {action} at {time_str}"
                 )
                 
-                logger.info(f"已安排任务: {time_str} {device_name} {action}")
+                logger.info(f"Scheduled task: {time_str} {device_name} {action}")
                 
             except Exception as e:
-                logger.error(f"添加任务时出错: {str(e)}")
+                logger.error(f"Error adding task: {str(e)}")
                 import traceback
                 traceback.print_exc()
         
-        # 启动调度器
+        # Start scheduler.
         self.scheduler.start()
-        logger.info("定时任务调度器已启动")
+        logger.info("Scheduled task manager started")
     
     def stop(self):
-        """停止定时任务调度器"""
+        """Stop the scheduled task manager."""
         if self.scheduler and self.scheduler.running:
             self.scheduler.shutdown()
-            logger.info("定时任务调度器已停止")
+            logger.info("Scheduled task manager stopped")
     
     def get_scheduled_tasks(self) -> List[Dict]:
-        """获取所有已安排的任务信息"""
+        """Return all scheduled task records."""
         if not self.scheduler or not self.scheduler.running:
             return []
         
         tasks = []
         for job in self.scheduler.get_jobs():
-            # 从job的name中提取信息
+            # Extract task info from the job name.
             name_parts = job.name.split()
             if len(name_parts) >= 3:
                 device = name_parts[0]

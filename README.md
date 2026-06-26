@@ -1,124 +1,143 @@
-# Smart Home Dashboard
+# Smart Home Skill
 
-统一的智能家居控制面板，支持 Hue 灯光、Wemo 开关、Rinnai 热水器、Meross 车库门。内网专用。
+Chinese version: [README_zh.md](README_zh.md)
 
-## 功能
+Smart Home Skill is a local, AI-facing control layer for real smart home devices. It exposes dedicated HTTP APIs, live OpenAPI documentation, and a lightweight dashboard so agents can operate household systems through the same deployed configuration that humans use.
 
-- **设备控制**：实时查看和控制灯光、开关、热水器、车库门
-- **定时任务**：Hue 早晚开关、Wemo 咖啡机定时
-- **历史数据**：24 小时内的亮度、开关、温度图表
+The core contract is simple: **OpenAPI defines what can be called; private overlays define what should be called in this home.**
 
-## 设备支持
+## What It Controls
 
-| 设备 | 说明 |
-|------|------|
-| Hue 灯光 | 1 盏，本地 phue API |
-| Wemo 开关 | 4 个，SSDP + pywemo |
-| Rinnai 热水器 | 云端 aiorinnai，支持循环 |
-| Meross 车库门 | 本地 HTTP `/config`；Meross 账号用于发现设备与获取签名 key |
+| Integration | Role |
+|---|---|
+| Hue | Local light status and control through `phue` |
+| Wemo | Local switch status/control through `pywemo` and private device config |
+| Rinnai | Water heater status and recirculation through `aiorinnai` |
+| Meross | Garage door trigger through local HTTP `/config`; cloud credentials are used only to discover the local device and signing key |
+| Amcrest | Local camera snapshot proxy through Digest Auth |
 
-## 快速开始
+## Design Principles
 
-### 环境
+1. **OpenAPI is the public source of truth.** Agents should fetch `GET /openapi.json` from the running service before selecting an endpoint. README snippets are examples, not the authority.
+2. **Runtime APIs stay dedicated and debuggable.** Actions remain visible endpoints such as `POST /api/garage/{door}/toggle`, not a generic `/execute` RPC with hidden intent in the payload.
+3. **Private overlays carry household semantics.** Device aliases, local IPs, credentials, notification recipients, safety preferences, and common natural-language mappings stay outside the public repo.
+4. **Physical actions are treated differently from software state.** Garage toggles use POST only and can send notifications after successful triggers.
+5. **The dashboard is secondary.** The UI is a human observability/debug surface. The primary product is the agent-readable local control layer.
 
-- Python 3.10+
-- Node.js 18+（前端构建）
+## Public/Private Layout
 
-### 安装
+The public repo contains reusable code, schemas, docs, tests, and safe examples.
+
+Local deployments add private state:
+
+| Local file or overlay | Purpose | Git status |
+|---|---|---|
+| `.env` | Credentials, ports, Resend notification config | ignored |
+| `config/wemo_config.yaml` | Real Wemo device names and local IPs | ignored |
+| `config/cameras.yaml` | Real camera names and local IPs | ignored |
+| Workspace private skill overlay | Natural-language aliases, default devices, safety notes, household policy | outside this public repo |
+
+The private overlay should not duplicate the full API. It should point agents to live OpenAPI and add only the local semantics OpenAPI cannot know.
+
+## Agent Workflow
+
+Before calling a device API, an agent should:
+
+1. Confirm the service is healthy: `GET /health`.
+2. Fetch the live schema: `GET /openapi.json`.
+3. Use private overlay notes only for name mapping, safety policy, and local defaults.
+4. Double-check that the selected endpoint and method exist in OpenAPI.
+5. Call the dedicated endpoint.
+6. Inspect the response, especially `status`, `error`, and `notification` fields for sensitive actions.
+
+Example garage flow:
 
 ```bash
-cd adhoc_jobs/smart_home
-python -m venv .venv
-source .venv/bin/activate  # 或 Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+curl -sS http://localhost:7999/openapi.json >/tmp/smart_home_openapi.json
+curl -sS -X POST http://localhost:7999/api/garage/2/toggle
 ```
 
-### 配置
-
-1. 复制 `.env.example` 为 `.env`，填入：
-   - `HUE_BRIDGE_IP`、`HUE_LIGHT_NAME`
-   - `RINNAI_USERNAME`、`RINNAI_PASSWORD`
-   - `MEROSS_EMAIL`、`MEROSS_PASSWORD`
-   - 可选车库门通知：`GARAGE_NOTIFY_ENABLED`、`GARAGE_NOTIFY_RECIPIENTS`、`RESEND_API_KEY`、`RESEND_FROM_EMAIL`
-
-2. 复制 `config/wemo_config.example.yaml` 为 `config/wemo_config.yaml`，填入真实设备 IP；或运行 `python scripts/refresh_wemo_devices.py` 自动发现
-
-3. 首次连接 Hue 需按下 Bridge 物理按钮完成配对
-
-### 运行
+## Quick Start
 
 ```bash
-# 构建前端（产出到 frontend/dist）
-./scripts/build-frontend.sh
+cd smart_home
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-# 启动后端（开发模式，--reload，端口 7999）
+cp .env.example .env
+cp config/wemo_config.example.yaml config/wemo_config.yaml
+cp config/cameras.example.yaml config/cameras.yaml
+```
+
+Edit the private files for your home. Do not commit them.
+
+Build the frontend and start the backend:
+
+```bash
+./scripts/build-frontend.sh
 ./scripts/start-backend.sh
 ```
 
-生产模式：先 `./scripts/build-frontend.sh`，再用你的本地进程管理器运行 `python main.py`，会自动 serve 静态文件。
+For production on macOS, prefer a foreground process launcher that inherits Local Network permission. This workspace uses Process Launcher to run `./start_server.sh`. Avoid PM2 for this service on macOS; Local Network permission can depend on the launch chain.
 
-## API 概览
+## API Discovery
 
-| 路径 | 说明 |
-|------|------|
-| `GET /api/status` | 设备状态（支持 `?devices=hue,wemo,rinnai,garage`） |
-| `GET /api/hue/toggle` | 灯光开关 |
-| `GET /api/wemo/{name}/toggle` | Wemo 开关 |
-| `GET /api/rinnai/circulate?duration=5` | 热水器循环 |
-| `GET /api/status?rinnai_refresh=true` | 维护刷新 + 存库 |
-| `POST /api/garage/{n}/toggle` | 车库门；通过 Meross 本地 HTTP 触发 |
-| `GET /api/history?hours=24` | 历史数据 |
+FastAPI serves the live schema and interactive docs:
 
-### 可选车库门通知
+| URL | Purpose |
+|---|---|
+| `/openapi.json` | Machine-readable API contract for agents |
+| `/docs` | Swagger UI |
+| `/redoc` | ReDoc UI |
+| `/health` | Service health check |
 
-车库门属于敏感动作。若 `.env` 中配置了 Resend 和收件人，后端会在每次 `POST /api/garage/{n}/toggle` 成功触发后发送通知邮件。未配置时不会发送，也不会影响车库门控制。
+Common dedicated endpoints include:
 
-```bash
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/status` | Aggregate device status; supports `?devices=hue,wemo,rinnai,garage` |
+| `GET /api/hue/status` | Hue status |
+| `GET /api/wemo/status` | Wemo status |
+| `GET /api/rinnai/status` | Rinnai status |
+| `POST /api/garage/{door}/toggle` | Sensitive garage trigger through Meross local HTTP |
+| `GET /api/history?hours=24` | Recent device history |
+| `GET /api/cameras` | Configured camera list |
+
+Treat this table as orientation only. Use `/openapi.json` for the live contract.
+
+## Optional Garage Notifications
+
+Garage door triggers can send email through Resend after a successful toggle. The feature is disabled unless all required settings are present and `GARAGE_NOTIFY_ENABLED=true`.
+
+```dotenv
 GARAGE_NOTIFY_ENABLED=true
 GARAGE_NOTIFY_RECIPIENTS=you@example.com;alerts@example.com
-RESEND_API_KEY=your_resend_api_key
+RESEND_API_KEY=op://your-vault/your-item/resend_api_key
 RESEND_FROM_EMAIL="Smart Home <notifications@example.com>"
 ```
 
-`GARAGE_NOTIFY_RECIPIENTS` 支持逗号或分号分隔多个收件人。`RESEND_API_KEY` 可以是已解析的 API key，也可以是 `op://...` 形式的 1Password secret reference；`start_server.sh` 会在启动时解析该 secret reference 后再启动后端。
+`GARAGE_NOTIFY_RECIPIENTS` supports comma or semicolon separated addresses. `RESEND_API_KEY` may be a resolved key or a 1Password `op://...` secret reference; `start_server.sh` resolves that reference at startup.
 
-## 脚本
-
-| 脚本 | 说明 |
-|------|------|
-| `scripts/build-frontend.sh` | 构建前端到 frontend/dist |
-| `scripts/start-backend.sh` | 启动后端（uvicorn --reload，端口 7999） |
-| `scripts/refresh_wemo_devices.py` | 发现 Wemo 设备并更新 config |
-| `scripts/backfill_rinnai_zero_temp.py` | 删除无效 Rinnai 记录（inlet/outlet 为 0 或 NULL） |
-| `scripts/backfill_rinnai_zero_temp.py --dry-run` | 预览将删除的记录 |
-
-## 项目结构
-
-```
-smart_home/
-├── main.py              # FastAPI 入口
-├── api/                 # 路由
-├── services/            # Hue/Wemo/Rinnai/Meross 服务
-├── models/database.py   # SQLite 历史
-├── config/              # wemo_config.yaml（gitignore）
-├── frontend/            # React + Vite
-└── scripts/             # 工具脚本
-```
-
-## 测试
+## Tests
 
 ```bash
-# 后端
-cd adhoc_jobs/smart_home && source .venv/bin/activate
-pytest test/ -v --ignore=test/test_integration_real.py
+source .venv/bin/activate
+python -m pytest test/ -q --ignore=test/test_integration_real.py
 
-# 前端
-cd adhoc_jobs/smart_home/frontend && npm test
+cd frontend
+npm test -- --run
+npm run build
 ```
 
-GitHub Actions 在 push/PR 时自动跑后端和前端测试（见 `.github/workflows/test.yml`）。
+See [docs/test.md](docs/test.md) for the full test strategy.
 
-## 文档
+## Documentation
 
-- `docs/dev_dashboard.md` - PRD 与功能规格
-- `docs/working.md` - 开发日志与 Lessons Learned
+| File | Purpose |
+|---|---|
+| [docs/prd.md](docs/prd.md) | Product framing and requirements |
+| [docs/rfc.md](docs/rfc.md) | Architecture and design decisions |
+| [docs/test.md](docs/test.md) | Test strategy and commands |
+| [docs/working.md](docs/working.md) | Development log and lessons learned |
+| [skills/smart_home_skill.md](skills/smart_home_skill.md) | Public AI skill instructions |

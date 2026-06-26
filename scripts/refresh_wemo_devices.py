@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-刷新Wemo设备配置脚本
-重新发现局域网内的Wemo设备，并更新 config/wemo_config.yaml 文件
+Refresh Wemo device configuration.
+Rediscover Wemo devices on the local network and update config/wemo_config.yaml.
 """
 
 import sys
@@ -9,21 +9,21 @@ import os
 import yaml
 from pathlib import Path
 
-# 添加项目根目录到路径
+# Add the project root to the import path.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pywemo
 
 def discover_devices():
-    """发现所有Wemo设备"""
-    print("正在扫描局域网内的Wemo设备...")
+    """Discover all Wemo devices."""
+    print("Scanning local network for Wemo devices...")
     devices = pywemo.discover_devices()
     
     if not devices:
-        print("未发现任何Wemo设备")
+        print("No Wemo devices found")
         return []
     
-    print(f"发现 {len(devices)} 个设备:")
+    print(f"Found {len(devices)} devices:")
     device_list = []
     for device in devices:
         device_info = {
@@ -38,24 +38,24 @@ def discover_devices():
     return device_list
 
 def load_existing_config(config_path):
-    """加载现有的配置文件"""
+    """Load an existing config file."""
     if not config_path.exists():
-        print(f"配置文件不存在: {config_path}")
+        print(f"Config file does not exist: {config_path}")
         return None
     
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
-        print(f"已加载现有配置: {config_path}")
+        print(f"Loaded existing config: {config_path}")
         return config
     except Exception as e:
-        print(f"读取配置文件时出错: {str(e)}", file=sys.stderr)
+        print(f"Error reading config file: {str(e)}", file=sys.stderr)
         return None
 
 def update_config_with_devices(config, devices):
-    """使用发现的设备信息更新配置"""
+    """Update config with discovered device information."""
     if config is None:
-        # 创建新配置
+        # Create a new config.
         config = {
             'devices': [],
             'schedule': {
@@ -64,15 +64,14 @@ def update_config_with_devices(config, devices):
             }
         }
     
-    # 更新设备信息
-    # 保留现有设备的description等字段
+    # Update device info and preserve optional fields like description.
     existing_devices = {d['name'].lower(): d for d in config.get('devices', [])}
     
     updated_devices = []
     for device in devices:
         device_name_lower = device['name'].lower()
         if device_name_lower in existing_devices:
-            # 保留现有设备的额外字段（如description）
+            # Preserve optional fields from the existing device.
             existing = existing_devices[device_name_lower]
             updated_device = {
                 'name': device['name'],
@@ -80,19 +79,19 @@ def update_config_with_devices(config, devices):
                 'port': device['port'],
                 'type': device['type']
             }
-            # 保留description等可选字段
+            # Preserve optional fields.
             if 'description' in existing:
                 updated_device['description'] = existing['description']
             updated_devices.append(updated_device)
-            print(f"更新设备: {device['name']}")
+            print(f"Updated device: {device['name']}")
         else:
-            # 新设备
+            # New device.
             updated_devices.append(device)
-            print(f"添加新设备: {device['name']}")
+            print(f"Added new device: {device['name']}")
     
     config['devices'] = updated_devices
     
-    # 确保schedule部分存在
+    # Ensure the schedule section exists.
     if 'schedule' not in config:
         config['schedule'] = {
             'timezone': 'Pacific',
@@ -102,33 +101,33 @@ def update_config_with_devices(config, devices):
     return config
 
 def save_config(config, config_path):
-    """保存配置到文件"""
+    """Save config to disk."""
     try:
-        # 创建备份
+        # Create backup.
         if config_path.exists():
             backup_path = config_path.with_suffix('.yaml.bak')
             import shutil
             shutil.copy2(config_path, backup_path)
-            print(f"已创建备份: {backup_path}")
+            print(f"Created backup: {backup_path}")
         
-        # 保存新配置
+        # Save new config.
         with open(config_path, 'w', encoding='utf-8') as f:
             yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
-        print(f"配置已保存: {config_path}")
+        print(f"Config saved: {config_path}")
         return True
     except Exception as e:
-        print(f"保存配置文件时出错: {str(e)}", file=sys.stderr)
+        print(f"Error saving config file: {str(e)}", file=sys.stderr)
         import traceback
         traceback.print_exc(file=sys.stderr)
         return False
 
 def main():
-    """主函数"""
-    # 确定配置文件路径
+    """Run the refresh command."""
+    # Determine config file path.
     project_root = Path(__file__).parent.parent
     config_path = project_root / 'config' / 'wemo_config.yaml'
     
-    # 如果通过环境变量指定了配置文件路径
+    # Allow an environment override for the config file path.
     config_file_env = os.getenv('WEMO_CONFIG_FILE')
     if config_file_env:
         config_path = Path(config_file_env)
@@ -136,35 +135,35 @@ def main():
             config_path = project_root / config_path
     
     print("=" * 60)
-    print("Wemo设备配置刷新工具")
+    print("Wemo device config refresh tool")
     print("=" * 60)
-    print(f"配置文件: {config_path}")
+    print(f"Config file: {config_path}")
     print()
     
-    # 发现设备
+    # Discover devices.
     devices = discover_devices()
     
     if not devices:
-        print("\n未发现任何设备，无法更新配置")
+        print("\nNo devices found; cannot update config")
         sys.exit(1)
     
     print()
     
-    # 加载现有配置
+    # Load existing config.
     config = load_existing_config(config_path)
     
-    # 更新配置
-    print("\n更新配置...")
+    # Update config.
+    print("\nUpdating config...")
     config = update_config_with_devices(config, devices)
     
-    # 保存配置
-    print("\n保存配置...")
+    # Save config.
+    print("\nSaving config...")
     if save_config(config, config_path):
-        print("\n配置更新完成!")
-        print("\n提示: 修改配置后需要重启服务器才能生效")
+        print("\nConfig update complete!")
+        print("\nNote: restart the server for config changes to take effect")
         sys.exit(0)
     else:
-        print("\n配置更新失败")
+        print("\nConfig update failed")
         sys.exit(1)
 
 if __name__ == "__main__":

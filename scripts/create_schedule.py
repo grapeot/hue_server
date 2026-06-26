@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rinnai 创建 Schedule 脚本 - 直接调用 GraphQL mutation"""
+"""Create a Rinnai schedule by calling the GraphQL mutation directly."""
 import asyncio
 import os
 import json

@@ -37,13 +37,13 @@ export function CameraCard({
           onClick={handleRefresh}
           className="text-sm px-2 py-1 text-blue-500 hover:bg-blue-50 rounded"
         >
-          刷新
+          Refresh
         </button>
       </div>
       <div className="relative aspect-video bg-gray-100">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="text-gray-400">加载中...</div>
+            <div className="text-gray-400">Loading...</div>
           </div>
         )}
         {error && (
@@ -54,7 +54,7 @@ export function CameraCard({
                 onClick={handleRefresh}
                 className="mt-2 text-sm text-blue-500"
               >
-                重试
+                Retry
               </button>
             </div>
           </div>
@@ -69,7 +69,7 @@ export function CameraCard({
         />
       </div>
       <div className="p-2 text-center text-sm text-gray-500 border-t">
-        点击查看全分辨率
+        Click for full resolution
       </div>
     </div>
   );

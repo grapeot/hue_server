@@ -1,5 +1,5 @@
 #!/bin/bash
-# 构建前端静态文件到 frontend/dist
+# Build frontend static files into frontend/dist.
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"

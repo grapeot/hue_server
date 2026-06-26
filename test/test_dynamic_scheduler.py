@@ -26,7 +26,7 @@ class TestScheduledAction:
         assert result['id'] == 'test123'
         assert result['action']['type'] == 'wemo.off'
         assert result['action']['params'] == {'device': 'tree'}
-        assert result['action_display'] == '关闭 tree'
+        assert result['action_display'] == 'Turn tree off'
         assert result['minutes'] == 5
         assert result['status'] == 'pending'
 

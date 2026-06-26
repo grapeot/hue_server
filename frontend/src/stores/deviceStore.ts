@@ -94,7 +94,7 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
       const res = await fetch(`${API_BASE}/status?devices=rinnai&rinnai_refresh=true`);
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || `维护刷新失败 (${res.status})`);
+        throw new Error(text || `Maintenance refresh failed (${res.status})`);
       }
       const data = await res.json();
       const prev = get().status;

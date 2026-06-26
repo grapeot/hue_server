@@ -35,25 +35,25 @@ export function CameraModal({ cameraName, snapshotUrl, onClose }: CameraModalPro
         onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold">{cameraName} - 全分辨率</h2>
+          <h2 className="text-xl font-semibold">{cameraName} - Full resolution</h2>
           <div className="flex gap-2">
             <button
               onClick={handleRefresh}
               className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              刷新
+              Refresh
             </button>
             <button
               onClick={onClose}
               className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
             >
-              关闭
+              Close
             </button>
           </div>
         </div>
         <div className="p-4 flex items-center justify-center min-h-[300px]">
           {loading && (
-            <div className="text-gray-500">加载中...</div>
+            <div className="text-gray-500">Loading...</div>
           )}
           {error && (
             <div className="text-red-500 text-center">
@@ -62,7 +62,7 @@ export function CameraModal({ cameraName, snapshotUrl, onClose }: CameraModalPro
                 onClick={handleRefresh}
                 className="mt-2 px-3 py-1 bg-blue-500 text-white rounded"
               >
-                重试
+                Retry
               </button>
             </div>
           )}
@@ -74,7 +74,7 @@ export function CameraModal({ cameraName, snapshotUrl, onClose }: CameraModalPro
             onLoad={() => setLoading(false)}
             onError={() => {
               setLoading(false);
-              setError('加载图片失败');
+              setError('Failed to load image');
             }}
           />
         </div>
