@@ -1,5 +1,5 @@
 #!/bin/bash
-# 启动后端（开发模式，带 --reload）
+# Start backend in development mode with --reload.
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"

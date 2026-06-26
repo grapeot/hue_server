@@ -55,7 +55,7 @@ class HueService:
             }
         except OSError as e:
             logger.warning(f"Hue Bridge unreachable: {e}")
-            err_msg = "Hue Bridge 不可达" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
+            err_msg = "Hue Bridge unreachable" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
             return {"name": self.light_name, "error": err_msg, "is_on": False, "brightness": 0}
     
     def turn_off(self) -> dict:
@@ -74,7 +74,7 @@ class HueService:
             }
         except OSError as e:
             logger.warning(f"Hue Bridge unreachable: {e}")
-            msg = "Hue Bridge 不可达" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
+            msg = "Hue Bridge unreachable" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
             return {"status": "error", "message": msg}
     
     def turn_on(self, brightness: int = 128) -> dict:
@@ -94,7 +94,7 @@ class HueService:
             }
         except OSError as e:
             logger.warning(f"Hue Bridge unreachable: {e}")
-            msg = "Hue Bridge 不可达" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
+            msg = "Hue Bridge unreachable" if "route to host" in str(e).lower() or "errno 65" in str(e).lower() else str(e)
             return {"status": "error", "message": msg}
     
     def toggle(self) -> dict:

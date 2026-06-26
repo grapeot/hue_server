@@ -1,183 +1,60 @@
-# Smart Home Dashboard - Working Log
+# Working Log
+
+## Current Direction
+
+The project is being reframed from a Hue-oriented dashboard into `smart_home_skill`: a local, AI-facing control layer with a lightweight dashboard. The runtime API stays dedicated and explicit. Live OpenAPI becomes the source of truth for agents, and private overlays provide household-specific semantics.
 
 ## Changelog
 
+### 2026-06-25
+
+- Switched garage control to POST-only semantics.
+- Added optional Resend notifications after successful garage toggles.
+- Moved garage control to Meross local HTTP `/config` for the physical trigger path.
+- Updated `start_server.sh` to resolve a Resend `op://` secret reference at startup rather than on each action.
+
 ### 2026-02-20
 
-- **控制后延迟采集系统**: API 控制设备后自动延迟采集状态并存库
-  - PRD/RFC: `docs/post_action_collection.md`
-  - 后端: `services/post_action_collector.py`
-  - 采集延迟: Hue/Wemo 3秒，Rinnai 10秒
-  - 与现有 30 分钟定时采集互补，提供更完整的历史数据
-  - 前端 10 秒延迟保持不变（只更新 UI，不写入数据库）
-  - 测试覆盖: `test/test_post_action_collector.py`
+- Added post-action state collection after device control.
+- Hue and Wemo state collection runs after a short delay; Rinnai uses a longer delay.
+- The collector complements recurring scheduled status collection.
 
 ### 2026-02-19
 
-- **通用定时任务系统**: 支持自然语言驱动的延迟执行
-  - PRD/RFC: `docs/scheduling_system.md`
-  - 后端: `services/action_executor.py` + `services/dynamic_scheduler.py` + `api/schedule.py`
-  - API: `POST/GET/DELETE /api/schedule/actions`
-  - 动作类型: hue.toggle/on/off, wemo.toggle/on/off, rinnai.circulate, garage.toggle
-  - 内存存储（不持久化），服务重启丢失
-- **前端动态任务展示**: Schedule Tab 显示待执行的动态任务
-  - `useScheduledActions.ts` hook
-  - 显示执行时间、动作描述、取消按钮
-- **测试覆盖**: `test/test_action_executor.py`, `test/test_dynamic_scheduler.py`
-- **Cameras 监控功能**: 新增 Tab 2 监控预览
-  - 后端: `services/camera_service.py` + `api/cameras.py`
-  - 异步proxy快照 (httpx + DigestAuth)，不落盘、不缓存
-  - 前端: `CamerasTab.tsx`、`CameraCard.tsx`、`CameraModal.tsx`、`useCameras.ts`
-- **Tab 标签缩短**: 设备控制→控制、监控预览→监控、定时任务→任务、历史数据→历史（适配手机）
-- **监控布局**: 桌面端一行2个画面 (md:grid-cols-2)
-- **Security hardening**: `.gitignore` 添加 `config/cameras.yaml`，`.env.example` 添加摄像头凭证
-- **删除参考实现**: 移除 `ref_cameras/` 目录
-- **Wemo Insight**: 确认 Tree、Veggie 是 Insight Switch，可读取功率/用电量
+- Added a dynamic delayed-action scheduler with `POST/GET/DELETE /api/schedule/actions`.
+- Added camera preview support through local Amcrest snapshot proxying.
+- Added mobile-friendly tab labels and responsive camera layout.
+- Added private config ignores for camera and Wemo configuration.
 
 ### 2026-02-18
 
-- **项目初始化**: 合并 hue_server 和 rinnai_heater 到 smart_home
-- **添加设备支持**: 集成 Meross 车库门 (MSG200)
-- **PRD 文档**: 重写 dev_dashboard.md，定义三个核心功能 (Control/Schedule/History)
-- **Shortcut API**: 添加 iOS Shortcut 友好的 Hue 控制接口
-- **服务层**: 创建 services/ 目录，封装 Hue/Wemo/Rinnai/Meross 服务
-- **API 层**: 创建 api/ 目录，拆分路由模块
-- **数据库**: 创建 models/database.py，SQLite 历史数据存储
-- **定时任务**: 创建 services/scheduler.py，每30分钟采集状态 + Hue 定时开关
-- **main.py 重构**: 整合所有服务层和 API 路由，添加 CORS 和健康检查
-- **测试覆盖**: 添加 test/test_hue_service.py, test/test_api.py, test/test_database.py
-- **React 前端**: 初始化 Vite + React + TypeScript + TailwindCSS
-- **Control Tab**: 设备状态显示和控制按钮
-- **Schedule Tab**: Hue/Wemo/Rinnai 定时任务展示
-- **History Tab**: Recharts 图表可视化 (亮度/开关/温度)
-- **Vite Proxy**: 配置开发时代理到后端
-- **UI 中文化**: 全部界面改为中文
-- **UI 设计优化**: 渐变背景、圆角卡片、开关按钮样式、响应式布局
-- **HistoryTab 修复**: 处理 JSON.parse 错误，支持已解析的数据
-- **循环延迟刷新**: 热水器触发循环后10秒再次刷新状态
-- **集成测试**: 添加 test/test_integration_real.py，默认跳过
-- **进程管理**: macOS 环境通过 Background Process Manager / Process Launcher 启动，避免 PM2 缺少 Local Network 权限
-- **生产静态文件**: main.py 自动 serve frontend/dist
-- **Rinnai 刷新改造**: 改为复用会话并增加维护刷新接口 `/api/rinnai/maintenance`
-- **Rinnai 维护刷新修复**: 刷新改为单请求 `GET /api/status?rinnai_refresh=true`，避免 maintenance + status 双请求导致的错误；修复 popstate 监听（useState→useEffect）
-- **Tab URL 路由**: 每个 tab 独立 URL：`/control`、`/schedule`、`/history`，刷新不丢失当前 tab；根路径 `/` 自动替换为 `/control`
-- **start_server.sh**: 作为进程管理器入口脚本，负责激活 venv 并启动 `python main.py`
-- **scripts 整理**: introspect_schema.py、create_schedule.py 移至 scripts/；main_legacy.py 删除；test_unit.py 移至 archive/
-- **Status API 容错**: 各服务调用加 try/except，单设备不可达时返回 200 + 该设备 error 字段
-- **Hue 服务容错**: get_status/turn_on/turn_off/toggle/set_timer 捕获 OSError，离线时返回友好错误；前端 toggleHue 检查 response.status
-- **load_dotenv**: main.py 显式指定 `Path(__file__).parent / ".env"`，确保服务进程正确加载配置
-- **start_server.sh**: 不 source .env（含空格的值如 `Baby room` 会被 shell 误解析为命令）
-- **Wemo 配置与调度迁移**: wemo_config.yaml 移至 config/，wemo_schedule.py 移至 services/；更新 main、wemo_service、refresh_wemo_devices 及文档中的路径引用
-- **Status API 分解**: `/api/status?devices=hue,wemo,rinnai,garage` 支持按设备拉取，无参数时拉取全部；各设备独立 try-except；前端 toggle 后只 fetch 对应设备
-- **维护刷新存库**: 点击「维护刷新」时，Rinnai 状态顺手写入 device_history 表
-- **Rinnai 无效数据过滤**: 进水/出水温度为 0 或 NULL 时不存库；backfill 同时删除 0 与 NULL；支持 `--dry-run` 预览
-- **History 图表时间轴**: 亮度、热水器温度图改用 XAxis type="number" + dataKey="time"（毫秒时间戳），横轴按实际时间等距显示
-- **Security Review**: 新增 docs/SECURITY_REVIEW.md，覆盖隐私暴露、鉴权、输入校验、密钥、网络等
-- **安全加固（内网专用）**: 移除 /api/debug；Hue 错误不再返回 bridge_ip；wemo_config.yaml 加入 .gitignore，提供 wemo_config.example.yaml（含内网专用说明）；data/ 加入 .gitignore；history hours 限制 1–168，garage door_index 校验范围
-- **GitHub Actions**: `.github/workflows/test.yml` 在 push/PR 时跑后端 pytest、前端 Vitest
-- **前端测试**: 添加 Vitest + deviceStore 单元测试
-- **History 图表 Pacific Time**: 前端 formatPacificTime；API 对 SQLite UTC 时间戳补 Z 后缀，避免前端误解析为本地时间
-- **Hue 关灯时亮度记录 0**: 灯关着时 brightness 存 0 而非之前的亮度值（scheduler.py）
-- **Rinnai 定时采集触发 maintenance**: scheduler 的 collect_device_states 现在会 trigger_maintenance=True，确保每次采集都是实时温度
-
----
+- Consolidated Hue, Wemo, Rinnai, Meross, history storage, scheduling, and frontend UI into one FastAPI/React service.
+- Added device-specific services under `services/` and API routers under `api/`.
+- Added SQLite history storage.
+- Added FastAPI static serving for the built frontend.
+- Added Process Launcher deployment guidance for macOS Local Network permission compatibility.
+- Added robust status aggregation so one failing integration does not fail the full `/api/status` response.
+- Added Wemo config migration to `config/wemo_config.yaml` and private git ignores.
+- Added tests for services, APIs, dynamic scheduling, frontend store logic, and integration paths.
 
 ## Lessons Learned
 
-### Meross 车库门状态问题
-- **问题**: `get_is_open()` 始终返回 True，但实际门是关闭的
-- **原因**: MSG200 需要安装磁性传感器才能检测门状态，未安装传感器时无法获取真实状态
-- **解决**: API 仅提供触发功能，不显示开/关状态
+### Meross Garage Door State Is Not Always Authoritative
 
-### Hue Bridge 配对
-- **问题**: phue 库首次连接需要按下 Bridge 按钮
-- **解决**: 配对信息存储在 `~/.python_hue`，格式为 JSON: `{"192.168.x.x": {"username": "xxx"}}`
+MSG200 garage openers may require a magnetic sensor for reliable door state. Without a reliable sensor, the API should describe garage actions as triggers/toggles rather than absolute open/close state.
 
-### APScheduler 时区
-- **问题**: 默认使用 UTC 时区
-- **解决**: 显式设置 `timezone=pytz.timezone('America/Los_Angeles')`
+### Garage Door Actions Need POST Semantics
 
-### TypeScript type-only import
-- **问题**: `error TS1484: 'DeviceStatus' is a type and must be imported using a type-only import`
-- **解决**: 使用 `import type { DeviceStatus }` 替代 `import { DeviceStatus }`
+Garage door triggers are sensitive physical actions. They should not be exposed as GET toggles. The current contract is `POST /api/garage/{door}/toggle`.
 
-### FastAPI 静态文件 SPA
-- **问题**: React Router 需要 SPA fallback 到 index.html
-- **解决**: 在 main.py 中添加 catch-all 路由，优先检查静态文件，否则返回 index.html
+### macOS Local Network Permission Depends on Launch Chain
 
-### macOS Local Network 权限与进程启动链路
-- **现象**: 通过缺少 GUI session 继承的 supervisor 启动时，Hue/Wemo/Meross 等内网设备可能不可达
-- **原因**: macOS Local Network 权限跟启动链路有关；PM2、cron、launchd 这类后台 supervisor 可能没有交互式终端权限继承
-- **解决**: 使用 Background Process Manager / Process Launcher 从有权限的交互式终端链路启动 `smart_home`
+Hue, Wemo, Meross, and camera integrations depend on local network access. PM2 or other background supervisors may not inherit the right macOS Local Network permission context. Use Process Launcher or another foreground-capable launch chain for production on macOS.
 
-### .env 不要用 shell source
-- **问题**: `source .env` 时，`HUE_LIGHT_NAME=Baby room` 中的 `room` 会被解析为命令执行
-- **解决**: 由 Python load_dotenv() 加载；main.py 使用 `load_dotenv(Path(__file__).parent / ".env")` 显式路径
+### Do Not Source `.env` in Shell
 
-### Status API 部分失败
-- **问题**: Hue/Wemo 等设备不可达时（如 No route to host），整个 /api/status 返回 500
-- **原因**: 聚合接口任一服务抛异常即整体失败
-- **解决**: 各服务调用加 try/except，失败时返回该服务的 error 字段，其他服务正常返回；前端 Hue 区显示「离线」状态
+Values such as `HUE_LIGHT_NAME=Baby room` can break shell parsing when sourced directly. Let Python `load_dotenv()` load `.env`; `start_server.sh` only handles the narrow startup secret-resolution case for `RESEND_API_KEY`.
 
-### Rinnai API 缓存问题
-- **问题**: aiorinnai 库可能缓存 API 连接，导致状态数据不更新
-- **现状**: 保持连接 + 失败后重连；通过触发 `/api/rinnai/maintenance` 做“维护读取”后再拉取最新状态
+### Aggregate Status Should Degrade Gracefully
 
----
-
-## TODO
-
-- [x] 完善 test coverage (api/services)
-- [x] 初始化 React + Vite 前端
-- [x] 实现 Control Tab
-- [x] 实现 Schedule Tab
-- [x] 实现 History Tab
-- [x] 实现 Cameras Tab (Amcrest 监控预览)
-- [x] 界面全中文化
-- [x] UI 设计优化
-- [x] Background Process Manager 部署入口
-- [x] 生产环境静态文件 serve
-- [x] 集成测试 (skip by default)
-- [x] Tab URL 路由 (/control, /cameras, /schedule, /history)
-- [x] Rinnai 维护刷新单请求改造
-- [ ] 实际部署到服务器
-- [ ] Wemo Insight 功率/用电量展示 (Tree, Veggie)
-
----
-
-## 部署说明
-
-### 开发模式
-
-```bash
-# 后端
-cd adhoc_jobs/smart_home
-source .venv/bin/activate
-python main.py  # 默认端口 7999
-
-# 前端 (另开终端)
-cd frontend
-npm run dev  # 端口 5173，自动代理 /api 到 7999
-```
-
-### 生产模式
-
-```bash
-cd adhoc_jobs/smart_home
-
-# 1. 构建前端（首次或前端有更新时）
-cd frontend && npm run build && cd ..
-
-# 2. 通过 Background Process Manager / Process Launcher 启动（会执行 start_server.sh）
-curl -X POST http://127.0.0.1:7997/declared-services/smart_home/restart
-
-# 访问 http://localhost:7999
-```
-
-### 运行集成测试
-
-```bash
-cd adhoc_jobs/smart_home
-source .venv/bin/activate
-pytest test/test_integration_real.py -m integration
-```
+Any single device integration can fail because of cloud auth, local network reachability, or vendor API changes. `/api/status` should return partial results with error fields rather than fail the entire aggregate request.

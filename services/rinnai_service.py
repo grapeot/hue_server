@@ -174,7 +174,7 @@ class RinnaiService:
         shadow = data.get("shadow", {}) or {}
         sensor = data.get("info", {}) or {}
 
-        # 解析设备时间
+        # Parse device time.
         unix_time_raw = sensor.get("unix_time")
         device_time = None
         device_time_pacific = None
@@ -184,7 +184,7 @@ class RinnaiService:
                 from datetime import datetime, timezone as tz
                 dt = datetime.fromtimestamp(unix_time, tz=tz.utc)
                 device_time = dt.isoformat()
-                # 转换为太平洋时间
+                # Convert to Pacific Time.
                 import pytz
                 pacific = pytz.timezone('America/Los_Angeles')
                 dt_pacific = dt.astimezone(pacific)

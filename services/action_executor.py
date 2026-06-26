@@ -5,14 +5,14 @@ from typing import Any, Callable
 logger = logging.getLogger(__name__)
 
 ACTION_DISPLAY_NAMES = {
-    'hue.toggle': '切换灯',
-    'hue.on': '开灯',
-    'hue.off': '关灯',
-    'wemo.toggle': '切换 {device}',
-    'wemo.on': '开启 {device}',
-    'wemo.off': '关闭 {device}',
-    'rinnai.circulate': '触发热水器循环 {duration} 分钟',
-    'garage.toggle': '触发车库门 {door}',
+    'hue.toggle': 'Toggle light',
+    'hue.on': 'Turn light on',
+    'hue.off': 'Turn light off',
+    'wemo.toggle': 'Toggle {device}',
+    'wemo.on': 'Turn {device} on',
+    'wemo.off': 'Turn {device} off',
+    'rinnai.circulate': 'Run water heater circulation for {duration} minutes',
+    'garage.toggle': 'Toggle garage door {door}',
 }
 
 

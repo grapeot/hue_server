@@ -1,38 +1,15 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Query
+from models.schemas import CreateActionRequest, ScheduledActionListResponse, ScheduledActionResponse
 
 from services.dynamic_scheduler import dynamic_scheduler
 
 router = APIRouter(prefix="/api/schedule", tags=["schedule"])
 
 
-class ActionParams(BaseModel):
-    type: str
-    params: dict = {}
-
-
-class CreateActionRequest(BaseModel):
-    minutes: float
-    action: ActionParams
-
-
-class ActionResponse(BaseModel):
-    id: str
-    action: dict
-    action_display: str
-    minutes: float
-    created_at: str
-    execute_at: str
-    status: str
-
-
-@router.post("/actions", response_model=ActionResponse)
+@router.post("/actions", response_model=ScheduledActionResponse, summary="Schedule a delayed action")
 async def create_action(request: CreateActionRequest):
-    if request.minutes <= 0:
-        raise HTTPException(status_code=400, detail="minutes must be positive")
-    
     action = dynamic_scheduler.schedule(
         action_type=request.action.type,
         action_params=request.action.params,
@@ -41,15 +18,15 @@ async def create_action(request: CreateActionRequest):
     return action.to_dict()
 
 
-@router.get("/actions")
-async def list_actions(status: Optional[str] = None):
+@router.get("/actions", response_model=ScheduledActionListResponse, summary="List delayed actions")
+async def list_actions(status: Optional[str] = Query(None, description="Optional action status filter")):
     actions = dynamic_scheduler.get_all(status)
     return {
         "actions": [a.to_dict() for a in actions]
     }
 
 
-@router.delete("/actions/{action_id}")
+@router.delete("/actions/{action_id}", response_model=ScheduledActionResponse, summary="Cancel a delayed action")
 async def cancel_action(action_id: str):
     action = dynamic_scheduler.cancel(action_id)
     if not action:

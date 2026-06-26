@@ -1,0 +1,53 @@
+# Product Requirements: Smart Home Skill
+
+## Product Positioning
+
+Smart Home Skill is a local, AI-facing control layer for real household devices. It is not primarily a dashboard. The dashboard exists so humans can observe and debug the same system that agents use.
+
+The product succeeds when an agent can hear a household command such as "turn on the coffee maker" or "toggle garage door 2", resolve it through private household semantics, verify the live API contract through OpenAPI, and call the correct dedicated endpoint without guessing.
+
+Unlike many AI skills in this workspace, this project is intentionally not CLI-only. Smart home control has two interaction modes. Natural language is useful for intent-heavy requests such as "turn this off in 30 minutes" or "start the water heater circulation". But physical buttons, iOS Shortcuts, Apple Watch actions, and Siri shortcuts need a low-latency always-on HTTP surface. A Flic button or phone shortcut should not have to open an AI chat, wait for model latency, and route through a CLI process just to trigger a household action. The web server exists to make those direct integrations reliable while still giving AI agents an OpenAPI-readable control layer.
+
+## Users
+
+| User | Need |
+|---|---|
+| AI agent | Discover current capabilities, map natural language to real devices, and safely call explicit endpoints |
+| Home operator | Keep local device configuration private while exposing enough semantics for agents to act reliably |
+| Physical/shortcut trigger | Call low-latency HTTP endpoints directly from Flic, iOS Shortcuts, Apple Watch, Siri, or similar surfaces |
+| Developer/maintainer | Debug device integrations through stable routes, tests, logs, and OpenAPI |
+| Human dashboard user | Quickly check status and trigger common actions when needed |
+
+## Core Requirements
+
+1. The running service must expose `GET /openapi.json` as the machine-readable source of truth for callable APIs.
+2. The public repo must not contain real household IPs, credentials, notification addresses, routines, or private aliases.
+3. Private overlays must provide local semantics: aliases, default devices, safety notes, and household-specific policy.
+4. Device actions must remain dedicated endpoints so logs, curl commands, browser docs, and tests stay easy to debug.
+5. Physical actions must be explicit. Garage door toggles use `POST` only and report notification results when notifications are enabled.
+6. The dashboard must remain lightweight and same-origin with the FastAPI backend.
+7. The service must stay available as an always-on local HTTP server so non-AI triggers can call it directly.
+
+## Supported Device Classes
+
+| Device class | Current implementation | Required behavior |
+|---|---|---|
+| Lights | Hue via local bridge | Status, on, off, brightness, toggle |
+| Switches | Wemo via local config/discovery | Status, on, off, toggle |
+| Water heater | Rinnai cloud API | Status, recirculation, schedule readout |
+| Garage doors | Meross local HTTP `/config` | Trigger/toggle, no false promise of authoritative door position |
+| Cameras | Amcrest local snapshot proxy | List cameras and fetch snapshots without storing images |
+
+## Non-Goals
+
+1. This project is not a Home Assistant replacement.
+2. This project should not become a generic `/execute` RPC where all intent is hidden in a payload.
+3. Public docs should not describe one real home's topology or routines.
+4. Private overlays should not copy the full OpenAPI schema.
+
+## Success Criteria
+
+1. A fresh agent can use public docs to learn the workflow without seeing private household details.
+2. A local agent can combine live OpenAPI and private overlay notes to select the correct endpoint.
+3. Public examples use RFC 5737 example IPs and fake credentials only.
+4. Backend tests, frontend tests, frontend build, and privacy scans pass before release.

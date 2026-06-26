@@ -14,7 +14,7 @@ export function CamerasTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">加载摄像头列表...</div>
+        <div className="text-gray-500">Loading cameras...</div>
       </div>
     );
   }
@@ -30,12 +30,12 @@ export function CamerasTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">📷 实时监控</h2>
+        <h2 className="text-xl font-semibold">📷 Live Cameras</h2>
         <button
           onClick={handleRefreshAll}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          刷新全部
+          Refresh all
         </button>
       </div>
 

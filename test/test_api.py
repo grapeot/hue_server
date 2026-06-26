@@ -16,6 +16,21 @@ class TestHealthEndpoint:
         assert response.json()["status"] == "healthy"
 
 
+class TestOpenAPI:
+
+    def test_openapi_contains_agent_contract(self):
+        response = client.get("/openapi.json")
+        assert response.status_code == 200
+        schema = response.json()
+        paths = schema["paths"]
+
+        assert "/api/garage/{door_index}/toggle" in paths
+        assert "post" in paths["/api/garage/{door_index}/toggle"]
+        assert "get" not in paths["/api/garage/{door_index}/toggle"]
+        assert "/{full_path}" not in paths
+        assert schema["info"]["title"] == "Smart Home Skill"
+
+
 class TestRootEndpoint:
     
     def test_root_serves_spa(self):
@@ -49,6 +64,10 @@ class TestHueEndpoints:
         
         response = client.get("/api/hue/on")
         assert response.status_code == 200
+
+    def test_hue_brightness_validation(self):
+        response = client.get("/api/hue/on/999")
+        assert response.status_code == 422
 
 
 class TestWemoEndpoints:
@@ -91,6 +110,10 @@ class TestRinnaiEndpoints:
         response = client.get("/api/rinnai/maintenance")
         assert response.status_code == 200
         assert response.json()["status"] == "success"
+
+    def test_rinnai_circulate_duration_validation(self):
+        response = client.get("/api/rinnai/circulate?duration=0")
+        assert response.status_code == 422
 
 
 class TestGarageEndpoints:
@@ -155,6 +178,10 @@ class TestHistoryEndpoint:
         assert len(data) == 1
         assert data[0]["timestamp"] == "2026-02-19T00:47:05Z"
 
+    def test_history_hours_validation(self):
+        response = client.get("/api/history?hours=9999")
+        assert response.status_code == 422
+
 
 class TestScheduleEndpoints:
     
@@ -164,7 +191,7 @@ class TestScheduleEndpoints:
             mock_action.to_dict.return_value = {
                 'id': 'test123',
                 'action': {'type': 'wemo.off', 'params': {'device': 'tree'}},
-                'action_display': '关闭 tree',
+                'action_display': 'Turn tree off',
                 'minutes': 5,
                 'created_at': '2026-02-19T12:00:00',
                 'execute_at': '2026-02-19T12:05:00',
@@ -187,7 +214,7 @@ class TestScheduleEndpoints:
             "minutes": 0,
             "action": {"type": "wemo.off", "params": {}}
         })
-        assert response.status_code == 400
+        assert response.status_code == 422
     
     def test_list_actions(self):
         with patch('api.schedule.dynamic_scheduler.get_all') as mock_get_all:

@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import uvicorn
 
 from api import hue, wemo, rinnai, garage, status, history, cameras, schedule
+from models.schemas import HealthResponse
 from services.hue_service import hue_service
 from services.wemo_service import wemo_service
 from services.rinnai_service import rinnai_service
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Starting Smart Home Dashboard...")
     hue_ip = os.getenv("HUE_BRIDGE_IP")
-    logger.info(f"Debug: HUE_BRIDGE_IP={hue_ip or '(未配置)'}, .env exists={Path(__file__).parent.joinpath('.env').exists()}")
+    logger.info(f"Debug: HUE_BRIDGE_IP={hue_ip or '(not configured)'}, .env exists={Path(__file__).parent.joinpath('.env').exists()}")
     hue_service.connect()
 
     wemo_service.init_devices()
@@ -79,7 +80,16 @@ async def lifespan(app: FastAPI):
     logger.info("Smart Home Dashboard shutdown complete")
 
 
-app = FastAPI(title="Smart Home Dashboard", version="2.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="Smart Home Skill",
+    version="2.0.0",
+    description=(
+        "Local AI-facing smart home control layer. Fetch this OpenAPI schema "
+        "before invoking device actions, then use private overlays only for "
+        "house-specific names, defaults, and safety policy."
+    ),
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -98,7 +108,7 @@ app.include_router(history.router)
 app.include_router(cameras.router)
 app.include_router(schedule.router)
 
-@app.get("/health")
+@app.get("/health", response_model=HealthResponse, tags=["health"], summary="Health check")
 async def health_check():
     return {"status": "healthy"}
 
@@ -107,7 +117,7 @@ FRONTEND_DIST = Path(__file__).parent / "frontend" / "dist"
 if FRONTEND_DIST.exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
     
-    @app.get("/{full_path:path}")
+    @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
         file_path = FRONTEND_DIST / full_path
         if file_path.exists() and file_path.is_file():

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rinnai GraphQL schema 内省脚本 - 查询可用 mutations"""
+"""Inspect the Rinnai GraphQL schema and list available mutations."""
 import asyncio
 import os
 import json
