@@ -7,5 +7,6 @@ cd "$PROJECT_ROOT"
 
 source "${PROJECT_ROOT}/.venv/bin/activate"
 export PORT="${PORT:-7999}"
+export SMART_HOME_BIND_HOSTS="${SMART_HOME_BIND_HOSTS:-127.0.0.1}"
 
-exec uvicorn main:app --reload --host 0.0.0.0 --port "$PORT"
+exec uvicorn main:app --reload --host 127.0.0.1 --port "$PORT"

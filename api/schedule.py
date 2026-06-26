@@ -1,14 +1,15 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from models.schemas import CreateActionRequest, ScheduledActionListResponse, ScheduledActionResponse
+from services.auth import require_control_auth
 
 from services.dynamic_scheduler import dynamic_scheduler
 
 router = APIRouter(prefix="/api/schedule", tags=["schedule"])
 
 
-@router.post("/actions", response_model=ScheduledActionResponse, summary="Schedule a delayed action")
+@router.post("/actions", response_model=ScheduledActionResponse, summary="Schedule a delayed action", dependencies=[Depends(require_control_auth)])
 async def create_action(request: CreateActionRequest):
     action = dynamic_scheduler.schedule(
         action_type=request.action.type,
@@ -26,7 +27,7 @@ async def list_actions(status: Optional[str] = Query(None, description="Optional
     }
 
 
-@router.delete("/actions/{action_id}", response_model=ScheduledActionResponse, summary="Cancel a delayed action")
+@router.delete("/actions/{action_id}", response_model=ScheduledActionResponse, summary="Cancel a delayed action", dependencies=[Depends(require_control_auth)])
 async def cancel_action(action_id: str):
     action = dynamic_scheduler.cancel(action_id)
     if not action:

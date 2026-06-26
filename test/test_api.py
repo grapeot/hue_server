@@ -2,10 +2,16 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock, Mock
 
+import main
 from main import app
 
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def clear_control_token(monkeypatch):
+    monkeypatch.delenv("SMART_HOME_API_TOKEN", raising=False)
 
 
 class TestHealthEndpoint:
@@ -38,6 +44,41 @@ class TestRootEndpoint:
         assert response.status_code == 200
         assert "text/html" in response.headers.get("content-type", "")
         assert "<!doctype html>" in response.text.lower() or "<html" in response.text.lower()
+
+    def test_spa_rejects_path_traversal(self, tmp_path, monkeypatch):
+        dist = tmp_path / "dist"
+        dist.mkdir()
+        (dist / "index.html").write_text("<html>spa</html>")
+        (tmp_path / "secret.txt").write_text("do-not-serve")
+        monkeypatch.setattr(main, "FRONTEND_DIST", dist)
+
+        response = client.get("/%2e%2e/secret.txt")
+
+        assert response.status_code == 200
+        assert response.text == "<html>spa</html>"
+
+
+class TestControlAuth:
+
+    @patch('services.hue_service.hue_service.toggle')
+    def test_control_token_required_when_configured(self, mock_toggle, monkeypatch):
+        monkeypatch.setenv("SMART_HOME_API_TOKEN", "test-token")
+        mock_toggle.return_value = {"status": "success"}
+
+        response = client.get("/api/hue/toggle")
+
+        assert response.status_code == 401
+        mock_toggle.assert_not_called()
+
+    @patch('services.hue_service.hue_service.toggle')
+    def test_control_token_allows_mutation(self, mock_toggle, monkeypatch):
+        monkeypatch.setenv("SMART_HOME_API_TOKEN", "test-token")
+        mock_toggle.return_value = {"status": "success"}
+
+        response = client.get("/api/hue/toggle", headers={"X-Smart-Home-Token": "test-token"})
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
 
 
 class TestHueEndpoints:
