@@ -2,7 +2,7 @@ import asyncio
 import pytest
 from datetime import datetime, timedelta
 
-from services.dynamic_scheduler import DynamicScheduler, ScheduledAction
+from services.dynamic_scheduler import DynamicScheduler, MAX_PENDING_ACTIONS, ScheduledAction
 
 
 class TestScheduledAction:
@@ -49,6 +49,19 @@ class TestDynamicScheduler:
         assert action in scheduler.pending_actions.values()
         
         scheduler.cancel(action.id)
+
+    @pytest.mark.asyncio
+    async def test_schedule_limits_pending_actions(self):
+        scheduler = DynamicScheduler()
+        actions = []
+        for i in range(MAX_PENDING_ACTIONS):
+            actions.append(scheduler.schedule('wemo.off', {'device': f'test{i}'}, minutes=5))
+
+        with pytest.raises(ValueError):
+            scheduler.schedule('wemo.off', {'device': 'overflow'}, minutes=5)
+
+        for action in actions:
+            scheduler.cancel(action.id)
     
     @pytest.mark.asyncio
     async def test_get_pending_returns_sorted_by_execute_at(self):

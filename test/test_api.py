@@ -269,6 +269,41 @@ class TestScheduleEndpoints:
             "action": {"type": "wemo.off", "params": {}}
         })
         assert response.status_code == 422
+
+    def test_create_action_rejects_too_long_delay(self):
+        response = client.post("/api/schedule/actions", json={
+            "minutes": 1441,
+            "action": {"type": "hue.off", "params": {}}
+        })
+        assert response.status_code == 422
+
+    def test_create_action_rejects_unknown_type(self):
+        response = client.post("/api/schedule/actions", json={
+            "minutes": 5,
+            "action": {"type": "unknown.action", "params": {}}
+        })
+        assert response.status_code == 422
+
+    def test_create_action_requires_wemo_device(self):
+        response = client.post("/api/schedule/actions", json={
+            "minutes": 5,
+            "action": {"type": "wemo.off", "params": {}}
+        })
+        assert response.status_code == 422
+
+    def test_create_action_validates_rinnai_duration(self):
+        response = client.post("/api/schedule/actions", json={
+            "minutes": 5,
+            "action": {"type": "rinnai.circulate", "params": {"duration": 120}}
+        })
+        assert response.status_code == 422
+
+    def test_create_action_rejects_garage_by_default(self):
+        response = client.post("/api/schedule/actions", json={
+            "minutes": 5,
+            "action": {"type": "garage.toggle", "params": {"door": 1}}
+        })
+        assert response.status_code == 403
     
     def test_list_actions(self):
         with patch('api.schedule.dynamic_scheduler.get_all') as mock_get_all:

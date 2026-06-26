@@ -1,10 +1,14 @@
-from typing import Any, Dict, List, Literal, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class FlexibleModel(BaseModel):
     model_config = ConfigDict(extra="allow")
+
+
+class StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
 
 class ApiError(FlexibleModel):
@@ -97,13 +101,83 @@ class CameraListResponse(FlexibleModel):
     cameras: List[CameraInfo]
 
 
-class ScheduleAction(FlexibleModel):
-    type: str = Field(..., description="Action type such as wemo.off, hue.toggle, or garage.toggle")
-    params: Dict[str, Any] = Field(default_factory=dict)
+class EmptyActionParams(StrictModel):
+    pass
+
+
+class HueOnParams(StrictModel):
+    brightness: int = Field(128, ge=1, le=254)
+
+
+class DeviceActionParams(StrictModel):
+    device: str = Field(..., min_length=1)
+
+
+class RinnaiCirculateParams(StrictModel):
+    duration: int = Field(5, gt=0, le=60)
+
+
+class GarageToggleParams(StrictModel):
+    door: int = Field(..., ge=1)
+
+
+class HueToggleAction(StrictModel):
+    type: Literal["hue.toggle"]
+    params: EmptyActionParams = Field(default_factory=EmptyActionParams)
+
+
+class HueOnAction(StrictModel):
+    type: Literal["hue.on"]
+    params: HueOnParams = Field(default_factory=HueOnParams)
+
+
+class HueOffAction(StrictModel):
+    type: Literal["hue.off"]
+    params: EmptyActionParams = Field(default_factory=EmptyActionParams)
+
+
+class WemoToggleAction(StrictModel):
+    type: Literal["wemo.toggle"]
+    params: DeviceActionParams
+
+
+class WemoOnAction(StrictModel):
+    type: Literal["wemo.on"]
+    params: DeviceActionParams
+
+
+class WemoOffAction(StrictModel):
+    type: Literal["wemo.off"]
+    params: DeviceActionParams
+
+
+class RinnaiCirculateAction(StrictModel):
+    type: Literal["rinnai.circulate"]
+    params: RinnaiCirculateParams = Field(default_factory=RinnaiCirculateParams)
+
+
+class GarageToggleAction(StrictModel):
+    type: Literal["garage.toggle"]
+    params: GarageToggleParams
+
+
+ScheduleAction = Annotated[
+    Union[
+        HueToggleAction,
+        HueOnAction,
+        HueOffAction,
+        WemoToggleAction,
+        WemoOnAction,
+        WemoOffAction,
+        RinnaiCirculateAction,
+        GarageToggleAction,
+    ],
+    Field(discriminator="type"),
+]
 
 
 class CreateActionRequest(FlexibleModel):
-    minutes: float = Field(..., gt=0, description="Delay before execution, in minutes")
+    minutes: float = Field(..., gt=0, le=1440, description="Delay before execution, in minutes")
     action: ScheduleAction
 
 
