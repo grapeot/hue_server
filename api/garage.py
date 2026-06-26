@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path
 from models.schemas import ApiError, GarageStatus, GarageToggleResponse
+from services.auth import require_control_auth
 from services.meross_service import meross_service
 
 router = APIRouter(prefix="/api/garage", tags=["garage"])
@@ -24,6 +25,7 @@ async def _toggle_garage(door_index: int):
     responses={400: {"model": ApiError}},
     summary="Toggle a garage door",
     description="Sensitive physical action. Uses POST only and sends an optional notification when configured.",
+    dependencies=[Depends(require_control_auth)],
 )
 async def garage_toggle(door_index: int = Path(..., ge=1)):
     return await _toggle_garage(door_index)

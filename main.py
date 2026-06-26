@@ -1,8 +1,10 @@
 import asyncio
 import logging
 import os
+import socket
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import List, Optional, Set, Tuple
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +31,67 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_TAILSCALE_HOST = "quantum.tail63c3c5.ts.net"
+
+
+def _split_env_list(value: Optional[str], default: List[str]) -> List[str]:
+    if not value:
+        return default
+    items = [item.strip() for item in value.split(",") if item.strip()]
+    return items or default
+
+
+def _safe_frontend_file(path: str) -> Optional[Path]:
+    frontend_root = FRONTEND_DIST.resolve()
+    candidate = (FRONTEND_DIST / path).resolve()
+    if not candidate.is_relative_to(frontend_root):
+        return None
+    if candidate.exists() and candidate.is_file():
+        return candidate
+    return None
+
+
+def _bind_sockets(hosts: List[str], port: int) -> List[socket.socket]:
+    sockets: List[socket.socket] = []
+    seen: Set[Tuple[int, str, int]] = set()
+    for host in hosts:
+        try:
+            addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+        except socket.gaierror as exc:
+            logger.warning("Skipping unresolved bind host %s: %s", host, exc)
+            continue
+
+        for family, socktype, proto, _canonname, sockaddr in addresses:
+            key = (family, sockaddr[0], sockaddr[1])
+            if key in seen:
+                continue
+            sock = socket.socket(family, socktype, proto)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind(sockaddr)
+                sock.listen(2048)
+            except OSError as exc:
+                sock.close()
+                logger.warning("Skipping bind address %s:%s: %s", sockaddr[0], sockaddr[1], exc)
+                continue
+            sockets.append(sock)
+            seen.add(key)
+            logger.info("Listening on %s:%s", sockaddr[0], sockaddr[1])
+
+    if not sockets:
+        raise RuntimeError(f"Could not bind any configured host on port {port}: {hosts}")
+    return sockets
+
+
+def _run_uvicorn() -> None:
+    port = int(os.getenv("PORT", "7999"))
+    bind_hosts = _split_env_list(os.getenv("SMART_HOME_BIND_HOSTS"), ["127.0.0.1"])
+    sockets = _bind_sockets(bind_hosts, port)
+    config = uvicorn.Config(app, log_level="info")
+    server = uvicorn.Server(config)
+    server.run(sockets=sockets)
 
 
 @asynccontextmanager
@@ -91,9 +154,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+cors_origins = _split_env_list(
+    os.getenv("SMART_HOME_CORS_ORIGINS"),
+    [
+        "http://localhost:7999",
+        "http://127.0.0.1:7999",
+        f"http://{DEFAULT_TAILSCALE_HOST}:7999",
+        f"https://{DEFAULT_TAILSCALE_HOST}",
+    ],
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -119,13 +192,12 @@ if FRONTEND_DIST.exists():
     
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
-        file_path = FRONTEND_DIST / full_path
-        if file_path.exists() and file_path.is_file():
+        file_path = _safe_frontend_file(full_path)
+        if file_path:
             return FileResponse(file_path)
         return FileResponse(FRONTEND_DIST / "index.html")
     
     logger.info(f"Serving frontend from {FRONTEND_DIST}")
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "7999"))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    _run_uvicorn()
