@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 async def get_rinnai_status(refresh: bool = False):
     return await rinnai_service.get_status(trigger_maintenance=refresh)
 
-@router.get("/maintenance", response_model=RinnaiStatus, summary="Trigger Rinnai maintenance refresh", dependencies=[Depends(require_control_auth)])
+@router.post("/maintenance", response_model=RinnaiStatus, summary="Trigger Rinnai maintenance refresh", dependencies=[Depends(require_control_auth)])
 async def refresh_rinnai_status(wait_seconds: float = Query(5.0, ge=0, le=30)):
     try:
         return await rinnai_service.trigger_maintenance_retrieval(wait_seconds=wait_seconds)
@@ -25,7 +25,7 @@ async def refresh_rinnai_status(wait_seconds: float = Query(5.0, ge=0, le=30)):
             "is_online": False,
         }
 
-@router.get("/circulate", response_model=ActionResult, summary="Start Rinnai recirculation", dependencies=[Depends(require_control_auth)])
+@router.post("/circulate", response_model=ActionResult, summary="Start Rinnai recirculation", dependencies=[Depends(require_control_auth)])
 async def rinnai_circulate(duration: int = Query(5, gt=0, le=60)):
     result = await rinnai_service.start_circulation(duration)
     await schedule_collection("rinnai", "main_house")

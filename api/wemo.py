@@ -13,19 +13,19 @@ router = APIRouter(prefix="/api/wemo", tags=["wemo"])
 async def get_wemo_status():
     return await asyncio.to_thread(wemo_service.get_all_status)
 
-@router.get("/{device_name}/toggle", response_model=ActionResult, summary="Toggle a Wemo switch", dependencies=[Depends(require_control_auth)])
+@router.post("/{device_name}/toggle", response_model=ActionResult, summary="Toggle a Wemo switch", dependencies=[Depends(require_control_auth)])
 async def wemo_toggle(device_name: str):
     result = await asyncio.to_thread(wemo_service.toggle, device_name)
     await schedule_collection("wemo", device_name)
     return result
 
-@router.get("/{device_name}/on", response_model=ActionResult, summary="Turn a Wemo switch on", dependencies=[Depends(require_control_auth)])
+@router.post("/{device_name}/on", response_model=ActionResult, summary="Turn a Wemo switch on", dependencies=[Depends(require_control_auth)])
 async def wemo_on(device_name: str):
     result = await asyncio.to_thread(wemo_service.turn_on, device_name)
     await schedule_collection("wemo", device_name)
     return result
 
-@router.get("/{device_name}/off", response_model=ActionResult, summary="Turn a Wemo switch off", dependencies=[Depends(require_control_auth)])
+@router.post("/{device_name}/off", response_model=ActionResult, summary="Turn a Wemo switch off", dependencies=[Depends(require_control_auth)])
 async def wemo_off(device_name: str):
     result = await asyncio.to_thread(wemo_service.turn_off, device_name)
     await schedule_collection("wemo", device_name)
