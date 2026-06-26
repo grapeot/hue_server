@@ -72,6 +72,8 @@ class GarageToggleResponse(ActionResult):
     previous_state: Optional[Dict[str, Any]] = None
     target_open: Optional[bool] = None
     reported_state: Optional[Any] = None
+    final_state: Optional[Dict[str, Any]] = None
+    verified: Optional[bool] = None
     executed: Optional[int] = None
     timestamp: Optional[str] = None
     notification: Optional[NotificationResult] = None
