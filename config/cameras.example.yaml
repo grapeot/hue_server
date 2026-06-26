@@ -5,32 +5,32 @@
 cameras:
   - name: "Upstairs Patio"
     id: "upstairs_patio"
-    ip: "192.168.180.69"
+    ip: "192.0.2.20"
   
   - name: "Frontyard"
     id: "frontyard"
-    ip: "192.168.180.52"
+    ip: "192.0.2.21"
   
   - name: "Outer Patio"
     id: "outer_patio"
-    ip: "192.168.180.182"
+    ip: "192.0.2.22"
   
   - name: "Backyard"
     id: "backyard"
-    ip: "192.168.180.92"
+    ip: "192.0.2.23"
   
   - name: "Heat Pump Side Door"
     id: "heat_pump_side_door"
-    ip: "192.168.180.147"
+    ip: "192.0.2.24"
   
   - name: "Downstairs Side Door"
     id: "downstairs_side_door"
-    ip: "192.168.180.74"
+    ip: "192.0.2.25"
   
   - name: "Driveway"
     id: "driveway"
-    ip: "192.168.180.85"
+    ip: "192.0.2.26"
   
   - name: "Babyroom"
     id: "babyroom"
-    ip: "192.168.180.100"
+    ip: "192.0.2.27"

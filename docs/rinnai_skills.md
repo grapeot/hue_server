@@ -4,10 +4,10 @@
 
 | 项目 | 值 |
 |------|-----|
-| IP | 192.168.180.177 |
-| MAC | 24:58:7c:25:2c:14 (Espressif) |
-| Device ID | TF.XE-007042 |
-| Thing Name | CR_3661475f-4ab1-7025-625e-78c38235726e |
+| IP | 192.0.2.30 |
+| MAC | 00:00:5e:00:53:01 (example) |
+| Device ID | example-device-id |
+| Thing Name | example-thing-name |
 | 固件 | 1.0.1 |
 
 ## 环境配置
