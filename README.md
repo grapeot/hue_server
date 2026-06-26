@@ -65,7 +65,7 @@ pip install -r requirements.txt
 | `GET /api/wemo/{name}/toggle` | Wemo 开关 |
 | `GET /api/rinnai/circulate?duration=5` | 热水器循环 |
 | `GET /api/status?rinnai_refresh=true` | 维护刷新 + 存库 |
-| `GET /api/garage/{n}/toggle` | 车库门；通过 Meross 本地 HTTP 触发 |
+| `POST /api/garage/{n}/toggle` | 车库门；通过 Meross 本地 HTTP 触发 |
 | `GET /api/history?hours=24` | 历史数据 |
 
 ## 脚本
