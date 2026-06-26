@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,11 +12,18 @@ router = APIRouter(prefix="/api/schedule", tags=["schedule"])
 
 @router.post("/actions", response_model=ScheduledActionResponse, summary="Schedule a delayed action", dependencies=[Depends(require_control_auth)])
 async def create_action(request: CreateActionRequest):
-    action = dynamic_scheduler.schedule(
-        action_type=request.action.type,
-        action_params=request.action.params,
-        minutes=request.minutes,
-    )
+    if request.action.type == "garage.toggle" and os.getenv("SMART_HOME_ALLOW_GARAGE_SCHEDULING") != "true":
+        raise HTTPException(status_code=403, detail="Garage scheduling is disabled")
+
+    action_params = request.action.params.model_dump()
+    try:
+        action = dynamic_scheduler.schedule(
+            action_type=request.action.type,
+            action_params=action_params,
+            minutes=request.minutes,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     return action.to_dict()
 
 

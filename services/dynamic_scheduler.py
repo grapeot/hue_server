@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 PACIFIC_TZ = pytz.timezone('America/Los_Angeles')
 
 MAX_COMPLETED_ACTIONS = 50
+MAX_PENDING_ACTIONS = 25
 
 
 @dataclass
@@ -49,6 +50,9 @@ class DynamicScheduler:
         self._tasks: dict[str, asyncio.Task] = {}
     
     def schedule(self, action_type: str, action_params: dict, minutes: float) -> ScheduledAction:
+        if len(self.pending_actions) >= MAX_PENDING_ACTIONS:
+            raise ValueError(f"Too many pending actions; limit is {MAX_PENDING_ACTIONS}")
+
         action_id = str(uuid.uuid4())[:8]
         now = datetime.now(PACIFIC_TZ)
         execute_at = now + timedelta(minutes=minutes)
