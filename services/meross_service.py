@@ -23,6 +23,30 @@ class MerossService:
         self._local_ip = None
         self._key = None
         self._connected = False
+        self._verify_timeout_seconds = float(os.getenv("MEROSS_GARAGE_VERIFY_TIMEOUT_SECONDS", "20"))
+        self._verify_poll_interval_seconds = float(os.getenv("MEROSS_GARAGE_VERIFY_POLL_INTERVAL_SECONDS", "2"))
+
+    def _select_garage_device(self, devices: list):
+        expected_uuid = os.getenv("MEROSS_GARAGE_UUID")
+        expected_name = os.getenv("MEROSS_GARAGE_NAME")
+
+        if expected_uuid:
+            for device in devices:
+                if getattr(device, "uuid", None) == expected_uuid:
+                    return device
+            return None
+
+        if expected_name:
+            expected_name_lower = expected_name.lower()
+            for device in devices:
+                if getattr(device, "name", "").lower() == expected_name_lower:
+                    return device
+            return None
+
+        if len(devices) == 1:
+            return devices[0]
+
+        return None
     
     async def connect(self) -> bool:
         email = os.getenv("MEROSS_EMAIL")
@@ -48,8 +72,9 @@ class MerossService:
             await asyncio.sleep(2)
             
             devices = self.manager.find_devices()
-            if devices:
-                self.device = devices[0]
+            selected_device = self._select_garage_device(devices)
+            if selected_device:
+                self.device = selected_device
                 await self.device.async_update()
                 self._local_ip = getattr(self.device, "_inner_ip", None)
                 self._key = self.client.cloud_credentials.key
@@ -57,7 +82,7 @@ class MerossService:
                 logger.info(f"Connected to Meross device: {self.device.name} ({self._local_ip})")
                 return True
             else:
-                logger.error("No Meross devices found")
+                logger.error("No matching Meross garage device found; set MEROSS_GARAGE_UUID or MEROSS_GARAGE_NAME")
                 return False
         except Exception as e:
             logger.error(f"Error connecting to Meross: {e}")
@@ -110,6 +135,31 @@ class MerossService:
         if "open" in current_state:
             return bool(current_state["open"])
         return bool(self.device.get_is_open(door_index))
+
+    def _read_door_state(self, door_index: int) -> tuple[dict, bool]:
+        payload = self._local_request(
+            "Appliance.GarageDoor.State",
+            "GET",
+            {"state": {"channel": door_index}},
+        )
+        state = payload.get("state", {}) if isinstance(payload, dict) else {}
+        return state, self._get_current_open_state(door_index, state)
+
+    async def _wait_for_target_state(self, door_index: int, target_open: bool) -> tuple[bool, dict]:
+        timeout = max(0.0, self._verify_timeout_seconds)
+        interval = max(0.1, self._verify_poll_interval_seconds)
+        deadline = time.monotonic() + timeout
+        last_state = {}
+
+        while True:
+            last_state, is_open = await asyncio.to_thread(self._read_door_state, door_index)
+            if is_open == target_open:
+                return True, last_state
+
+            if time.monotonic() >= deadline:
+                return False, last_state
+
+            await asyncio.sleep(min(interval, max(0.0, deadline - time.monotonic())))
     
     async def toggle_door(self, door_index: int) -> dict:
         if not self.device:
@@ -122,15 +172,8 @@ class MerossService:
             if not hasattr(self.device, "get_is_open"):
                 return {"status": "error", "message": "Connected Meross device is not a garage opener"}
 
-            current_payload = await asyncio.to_thread(
-                self._local_request,
-                "Appliance.GarageDoor.State",
-                "GET",
-                {"state": {"channel": door_index}},
-            )
-            current_state = current_payload.get("state", {})
-            current_is_open = self._get_current_open_state(door_index, current_state)
-            target_open = 0 if current_is_open else 1
+            current_state, current_is_open = await asyncio.to_thread(self._read_door_state, door_index)
+            target_open = not current_is_open
             response_payload = await asyncio.to_thread(
                 self._local_request,
                 "Appliance.GarageDoor.State",
@@ -138,7 +181,7 @@ class MerossService:
                 {
                     "state": {
                         "channel": door_index,
-                        "open": target_open,
+                        "open": int(target_open),
                         "uuid": self.device.uuid,
                     }
                 },
@@ -146,17 +189,23 @@ class MerossService:
             state = response_payload.get("state") if isinstance(response_payload, dict) else None
             if isinstance(state, list):
                 state = state[0] if state else None
+            verified, final_state = await self._wait_for_target_state(door_index, target_open)
+            status = "success" if verified else "triggered_unverified"
             result = {
-                "status": "success",
+                "status": status,
                 "door": door_index,
                 "action": "toggle",
                 "backend": "meross_local_http",
                 "previous_state": current_state,
-                "target_open": bool(target_open),
+                "target_open": target_open,
                 "reported_state": state,
+                "final_state": final_state,
+                "verified": verified,
                 "executed": state.get("execute") if isinstance(state, dict) else None,
                 "timestamp": datetime.now().isoformat()
             }
+            if not verified:
+                result["message"] = "Garage command was sent, but final door state was not verified"
             try:
                 result["notification"] = await asyncio.to_thread(
                     notification_service.send_garage_toggle,
