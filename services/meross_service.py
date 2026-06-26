@@ -9,6 +9,8 @@ from datetime import datetime
 import requests
 from dotenv import load_dotenv
 
+from services.notification_service import notification_service
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -144,7 +146,7 @@ class MerossService:
             state = response_payload.get("state") if isinstance(response_payload, dict) else None
             if isinstance(state, list):
                 state = state[0] if state else None
-            return {
+            result = {
                 "status": "success",
                 "door": door_index,
                 "action": "toggle",
@@ -155,6 +157,15 @@ class MerossService:
                 "executed": state.get("execute") if isinstance(state, dict) else None,
                 "timestamp": datetime.now().isoformat()
             }
+            try:
+                result["notification"] = await asyncio.to_thread(
+                    notification_service.send_garage_toggle,
+                    result,
+                )
+            except Exception as e:
+                logger.error(f"Error sending garage notification: {e}")
+                result["notification"] = {"enabled": True, "sent": False, "error": str(e)}
+            return result
         except Exception as e:
             logger.error(f"Error toggling door {door_index}: {e}")
             return {"status": "error", "message": str(e)}

@@ -56,16 +56,16 @@
 - **HistoryTab 修复**: 处理 JSON.parse 错误，支持已解析的数据
 - **循环延迟刷新**: 热水器触发循环后10秒再次刷新状态
 - **集成测试**: 添加 test/test_integration_real.py，默认跳过
-- **PM2 部署**: 添加 ecosystem.config.js，端口 7999
+- **进程管理**: macOS 环境通过 Background Process Manager / Process Launcher 启动，避免 PM2 缺少 Local Network 权限
 - **生产静态文件**: main.py 自动 serve frontend/dist
 - **Rinnai 刷新改造**: 改为复用会话并增加维护刷新接口 `/api/rinnai/maintenance`
 - **Rinnai 维护刷新修复**: 刷新改为单请求 `GET /api/status?rinnai_refresh=true`，避免 maintenance + status 双请求导致的错误；修复 popstate 监听（useState→useEffect）
 - **Tab URL 路由**: 每个 tab 独立 URL：`/control`、`/schedule`、`/history`，刷新不丢失当前 tab；根路径 `/` 自动替换为 `/control`
-- **start_server.sh**: 作为 PM2 的入口脚本（`pm2 start ecosystem.config.js` 时由 PM2 执行），负责激活 venv 并启动 `python main.py`
+- **start_server.sh**: 作为进程管理器入口脚本，负责激活 venv 并启动 `python main.py`
 - **scripts 整理**: introspect_schema.py、create_schedule.py 移至 scripts/；main_legacy.py 删除；test_unit.py 移至 archive/
 - **Status API 容错**: 各服务调用加 try/except，单设备不可达时返回 200 + 该设备 error 字段
 - **Hue 服务容错**: get_status/turn_on/turn_off/toggle/set_timer 捕获 OSError，离线时返回友好错误；前端 toggleHue 检查 response.status
-- **load_dotenv**: main.py 显式指定 `Path(__file__).parent / ".env"`，确保 PM2 环境下正确加载
+- **load_dotenv**: main.py 显式指定 `Path(__file__).parent / ".env"`，确保服务进程正确加载配置
 - **start_server.sh**: 不 source .env（含空格的值如 `Baby room` 会被 shell 误解析为命令）
 - **Wemo 配置与调度迁移**: wemo_config.yaml 移至 config/，wemo_schedule.py 移至 services/；更新 main、wemo_service、refresh_wemo_devices 及文档中的路径引用
 - **Status API 分解**: `/api/status?devices=hue,wemo,rinnai,garage` 支持按设备拉取，无参数时拉取全部；各设备独立 try-except；前端 toggle 后只 fetch 对应设备
@@ -105,11 +105,10 @@
 - **问题**: React Router 需要 SPA fallback 到 index.html
 - **解决**: 在 main.py 中添加 catch-all 路由，优先检查静态文件，否则返回 index.html
 
-### PM2 与直接运行网络环境不同
-- **现象**: 直接 `python main.py` 可连接 Hue Bridge，PM2 下报 No route to host (errno 65)
-- **原因**: PM2 进程可能运行在不同机器、不同会话或启动时网络不同（如通过 SSH 在远程启动 PM2）
-- **排查**: 直接运行对比；检查 HUE_BRIDGE_IP、网络连通性
-- **临时方案**: 用 `screen`/`tmux` 或 `nohup python main.py &` 替代 PM2，或确保 PM2 与终端在同一机器、同一网络
+### macOS Local Network 权限与进程启动链路
+- **现象**: 通过缺少 GUI session 继承的 supervisor 启动时，Hue/Wemo/Meross 等内网设备可能不可达
+- **原因**: macOS Local Network 权限跟启动链路有关；PM2、cron、launchd 这类后台 supervisor 可能没有交互式终端权限继承
+- **解决**: 使用 Background Process Manager / Process Launcher 从有权限的交互式终端链路启动 `smart_home`
 
 ### .env 不要用 shell source
 - **问题**: `source .env` 时，`HUE_LIGHT_NAME=Baby room` 中的 `room` 会被解析为命令执行
@@ -136,7 +135,7 @@
 - [x] 实现 Cameras Tab (Amcrest 监控预览)
 - [x] 界面全中文化
 - [x] UI 设计优化
-- [x] PM2 部署脚本
+- [x] Background Process Manager 部署入口
 - [x] 生产环境静态文件 serve
 - [x] 集成测试 (skip by default)
 - [x] Tab URL 路由 (/control, /cameras, /schedule, /history)
@@ -169,9 +168,8 @@ cd adhoc_jobs/smart_home
 # 1. 构建前端（首次或前端有更新时）
 cd frontend && npm run build && cd ..
 
-# 2. PM2 启动（会执行 start_server.sh）
-pm2 start ecosystem.config.js
-pm2 save
+# 2. 通过 Background Process Manager / Process Launcher 启动（会执行 start_server.sh）
+curl -X POST http://127.0.0.1:7997/declared-services/smart_home/restart
 
 # 访问 http://localhost:7999
 ```

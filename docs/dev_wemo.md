@@ -48,25 +48,25 @@ WEMO_AUTO_DISCOVER=false
 # 设备信息hardcode，因为设备固定不变，无需频繁发现
 devices:
   - name: "Coffee"
-    host: "192.168.180.135"
+    host: "192.0.2.10"
     port: 49153
     type: "Switch"
     description: "咖啡机开关"  # 可选：设备描述
   
   - name: "Bedroom Light"
-    host: "192.168.180.57"
+    host: "192.0.2.11"
     port: 49153
     type: "LightSwitchLongPress"
     description: "卧室灯光"
   
   - name: "Tree"
-    host: "192.168.180.175"
+    host: "192.0.2.12"
     port: 49153
     type: "Insight"
     description: "圣诞树灯光"
   
   - name: "Veggie"
-    host: "192.168.180.68"
+    host: "192.0.2.13"
     port: 49153
     type: "Insight"
     description: "蔬菜灯"
@@ -257,24 +257,24 @@ GET /wemo/schedule/tasks
 devices:
   # 方式1: Hardcode设备信息（推荐，因为设备固定不变）
   - name: "Coffee"
-    host: "192.168.180.135"
+    host: "192.0.2.10"
     port: 49153
     type: "Switch"
     alias: ["coffee", "coffee maker"]  # 可选：设备别名，用于API调用时的匹配
   
   - name: "Bedroom Light"
-    host: "192.168.180.57"
+    host: "192.0.2.11"
     port: 49153
     type: "LightSwitchLongPress"
     alias: ["bedroom", "bedroom light"]
   
   - name: "Tree"
-    host: "192.168.180.175"
+    host: "192.0.2.12"
     port: 49153
     type: "Insight"
   
   - name: "Veggie"
-    host: "192.168.180.68"
+    host: "192.0.2.13"
     port: 49153
     type: "Insight"
 

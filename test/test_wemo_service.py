@@ -35,7 +35,7 @@ def test_turn_on_rediscoveries_device_and_updates_config(tmp_path, monkeypatch):
                 "devices": [
                     {
                         "name": "Coffee",
-                        "host": "192.168.180.135",
+                        "host": "192.0.2.10",
                         "port": 49153,
                         "description": "coffee switch",
                     }
@@ -48,8 +48,8 @@ def test_turn_on_rediscoveries_device_and_updates_config(tmp_path, monkeypatch):
         encoding="utf-8",
     )
 
-    stale_device = FakeWemoDevice("Coffee", "192.168.180.135", 49153, fail_on={"on"})
-    discovered_device = FakeWemoDevice("Coffee", "192.168.180.135", 49154)
+    stale_device = FakeWemoDevice("Coffee", "192.0.2.10", 49153, fail_on={"on"})
+    discovered_device = FakeWemoDevice("Coffee", "192.0.2.10", 49154)
 
     service = WemoService()
     service.config_file = str(config_path)
@@ -65,7 +65,7 @@ def test_turn_on_rediscoveries_device_and_updates_config(tmp_path, monkeypatch):
     assert service.devices["coffee"] is discovered_device
 
     updated_config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    assert updated_config["devices"][0]["host"] == "192.168.180.135"
+    assert updated_config["devices"][0]["host"] == "192.0.2.10"
     assert updated_config["devices"][0]["port"] == 49154
     assert updated_config["devices"][0]["description"] == "coffee switch"
 
@@ -76,7 +76,7 @@ def test_init_devices_loads_configured_devices(tmp_path, monkeypatch):
         yaml.dump(
             {
                 "devices": [
-                    {"name": "Coffee", "host": "192.168.180.135", "port": 49154}
+                    {"name": "Coffee", "host": "192.0.2.10", "port": 49154}
                 ]
             },
             sort_keys=False,
@@ -84,7 +84,7 @@ def test_init_devices_loads_configured_devices(tmp_path, monkeypatch):
         encoding="utf-8",
     )
 
-    device = FakeWemoDevice("Coffee", "192.168.180.135", 49154)
+    device = FakeWemoDevice("Coffee", "192.0.2.10", 49154)
     monkeypatch.setattr(
         "services.wemo_service.pywemo.setup_url_for_address",
         lambda host, port: f"http://{host}:{port}/setup.xml",
@@ -102,8 +102,8 @@ def test_init_devices_loads_configured_devices(tmp_path, monkeypatch):
 
 
 def test_get_all_status_refreshes_failed_device(monkeypatch):
-    stale_device = FakeWemoDevice("Coffee", "192.168.180.135", 49153, fail_on={"get_state"})
-    discovered_device = FakeWemoDevice("Coffee", "192.168.180.135", 49154, state=1)
+    stale_device = FakeWemoDevice("Coffee", "192.0.2.10", 49153, fail_on={"get_state"})
+    discovered_device = FakeWemoDevice("Coffee", "192.0.2.10", 49154, state=1)
 
     service = WemoService()
     service.config_file = "/tmp/nonexistent_wemo_config.yaml"
@@ -114,5 +114,5 @@ def test_get_all_status_refreshes_failed_device(monkeypatch):
     result = service.get_all_status()
 
     assert result["coffee"]["is_on"] == 1
-    assert result["coffee"]["host"] == "192.168.180.135"
+    assert result["coffee"]["host"] == "192.0.2.10"
     assert result["coffee"]["rediscovered"] is True

@@ -39,6 +39,7 @@ pip install -r requirements.txt
    - `HUE_BRIDGE_IP`、`HUE_LIGHT_NAME`
    - `RINNAI_USERNAME`、`RINNAI_PASSWORD`
    - `MEROSS_EMAIL`、`MEROSS_PASSWORD`
+   - 可选车库门通知：`GARAGE_NOTIFY_ENABLED`、`GARAGE_NOTIFY_RECIPIENTS`、`RESEND_API_KEY`、`RESEND_FROM_EMAIL`
 
 2. 复制 `config/wemo_config.example.yaml` 为 `config/wemo_config.yaml`，填入真实设备 IP；或运行 `python scripts/refresh_wemo_devices.py` 自动发现
 
@@ -67,6 +68,19 @@ pip install -r requirements.txt
 | `GET /api/status?rinnai_refresh=true` | 维护刷新 + 存库 |
 | `POST /api/garage/{n}/toggle` | 车库门；通过 Meross 本地 HTTP 触发 |
 | `GET /api/history?hours=24` | 历史数据 |
+
+### 可选车库门通知
+
+车库门属于敏感动作。若 `.env` 中配置了 Resend 和收件人，后端会在每次 `POST /api/garage/{n}/toggle` 成功触发后发送通知邮件。未配置时不会发送，也不会影响车库门控制。
+
+```bash
+GARAGE_NOTIFY_ENABLED=true
+GARAGE_NOTIFY_RECIPIENTS=you@example.com;alerts@example.com
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL="Smart Home <notifications@example.com>"
+```
+
+`GARAGE_NOTIFY_RECIPIENTS` 支持逗号或分号分隔多个收件人。`RESEND_API_KEY` 可以是已解析的 API key，也可以是 `op://...` 形式的 1Password secret reference；`start_server.sh` 会在启动时解析该 secret reference 后再启动后端。
 
 ## 脚本
 

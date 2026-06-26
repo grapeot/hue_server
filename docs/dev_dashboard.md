@@ -21,7 +21,7 @@
 | Hue 灯光 | 1 盏 (Baby room) | 本地 API (phue) | 主要控制目标 |
 | Wemo 开关 | 4 个 | SSDP + UPnP (pywemo) | Coffee, Veggie, Tree, Bedroom |
 | Rinnai 热水器 | 1 台 | 云端 GraphQL (aiorinnai) | 支持循环模式 |
-| Meross 车库门 | 2 门 | 云端 MQTT (meross-iot) | 无传感器，仅触发控制 |
+| Meross 车库门 | 2 门 | 本地 HTTP `/config` + Meross 签名 | 无传感器，仅触发控制；可选邮件通知 |
 | Amcrest 摄像头 | 8 个 | 本地 HTTP (Digest Auth) | 按需抓取，不做存储 |
 
 ---
@@ -94,7 +94,8 @@
 | 操作 | 行为 |
 |-----|------|
 | 显示 | 仅名称，无状态（传感器未安装） |
-| 点击触发 | Toggle: 发送开关信号 |
+| 点击触发 | Toggle: POST 到后端，后端通过 Meross 本地 HTTP `/config` 发送开关信号 |
+| 触发后通知 | 可选：若启用 Resend 配置，向配置收件人发送邮件通知 |
 
 ---
 
@@ -159,14 +160,14 @@
 **摄像头列表**
 | 名称 | IP | 状态 |
 |-----|-----|------|
-| Upstairs Patio | 192.168.180.69 | 待实现 |
-| Frontyard | 192.168.180.52 | 待实现 |
-| Outer Patio | 192.168.180.182 | 待实现 |
-| Backyard | 192.168.180.92 | 待实现 |
-| Heat Pump Side Door | 192.168.180.147 | 待实现 |
-| Downstairs Side Door | 192.168.180.74 | 待实现 |
-| Driveway | 192.168.180.85 | 待实现 |
-| Babyroom | 192.168.180.100 | 待实现 |
+| Upstairs Patio | 192.0.2.20 | 待实现 |
+| Frontyard | 192.0.2.21 | 待实现 |
+| Outer Patio | 192.0.2.22 | 待实现 |
+| Backyard | 192.0.2.23 | 待实现 |
+| Heat Pump Side Door | 192.0.2.24 | 待实现 |
+| Downstairs Side Door | 192.0.2.25 | 待实现 |
+| Driveway | 192.0.2.26 | 待实现 |
+| Babyroom | 192.0.2.27 | 待实现 |
 
 **交互规格**
 | 操作 | 行为 |
@@ -413,7 +414,20 @@ uvicorn main:app --port 8001
 | `/api/cameras` | GET | 获取摄像头列表 |
 | `/api/cameras/snapshot/{camera_name}` | GET | 获取摄像头快照 (proxy) |
 
-### 4.2 Cameras API（新增）
+### 4.2 Garage Notification（可选）
+
+车库门 toggle 是敏感动作。后端支持通过 Resend 在每次成功触发后发送邮件通知。该能力默认关闭，只有以下配置全部存在时启用：
+
+```bash
+GARAGE_NOTIFY_ENABLED=true
+GARAGE_NOTIFY_RECIPIENTS=you@example.com;alerts@example.com
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL="Smart Home <notifications@example.com>"
+```
+
+`GARAGE_NOTIFY_RECIPIENTS` 支持逗号或分号分隔多个收件人。`RESEND_API_KEY` 可以是已解析的 API key，也可以是 `op://...` 形式的 1Password secret reference；`start_server.sh` 会在启动时解析该 secret reference 后再启动后端。通知失败不会回滚或阻断车库门动作，只会记录错误并在 API 响应的 `notification` 字段中体现。
+
+### 4.3 Cameras API（新增）
 
 **GET /api/cameras**
 
@@ -458,7 +472,7 @@ uvicorn main:app --port 8001
 3. Streaming Response：后端不缓存图片，直接 pipe 到前端
 4. 超时处理：单个摄像头超时不影响其他摄像头
 
-### 4.3 iOS Shortcut API（手机快捷控制）
+### 4.4 iOS Shortcut API（手机快捷控制）
 
 专为 iOS Shortcuts 设计的简洁 API，支持 GET 请求。
 
@@ -507,7 +521,7 @@ GET http://localhost:8001/api/hue/cancel
 }
 ```
 
-### 4.4 Dashboard API（前端使用）
+### 4.5 Dashboard API（前端使用）
 
 | 端点 | 方法 | 描述 |
 |-----|------|------|
@@ -519,7 +533,7 @@ GET http://localhost:8001/api/hue/cancel
 | `/api/schedules` | GET | 获取所有定时任务 |
 | `/api/history` | GET | 获取历史数据 (支持时间范围) |
 
-### 4.5 响应格式
+### 4.6 响应格式
 
 **GET /api/status**
 ```json
@@ -660,6 +674,7 @@ smart_home/
 │   ├── wemo_service.py         # Wemo 服务
 │   ├── rinnai_service.py       # Rinnai 服务
 │   ├── meross_service.py       # Meross 服务
+│   ├── notification_service.py # Resend 通知服务
 │   ├── camera_service.py       # 摄像头服务 (新增)
 │   ├── scheduler.py            # 定时任务管理
 │   └── wemo_schedule.py        # Wemo 定时任务 (现有)
@@ -755,6 +770,7 @@ smart_home/
 - 传感器未安装，无法获取真实状态
 - 仅提供触发功能，不显示开/关状态
 - Garage Door 3 未接线，前端仅显示 Door 1 和 2
+- 触发动作通过 POST API 执行；若配置了 Resend 通知，每次触发后发送邮件
 
 ### 8.2 时区
 
