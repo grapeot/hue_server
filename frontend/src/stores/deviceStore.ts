@@ -107,7 +107,7 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
 
   toggleGarage: async (doorIndex: number) => {
     try {
-      const res = await fetch(`${API_BASE}/garage/${doorIndex}/toggle`);
+      const res = await fetch(`${API_BASE}/garage/${doorIndex}/toggle`, { method: 'POST' });
       if (!res.ok) throw new Error('Failed to toggle garage door');
     } catch (error) {
       set({ error: String(error) });

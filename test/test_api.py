@@ -93,6 +93,20 @@ class TestRinnaiEndpoints:
         assert response.json()["status"] == "success"
 
 
+class TestGarageEndpoints:
+
+    @patch('api.garage.meross_service.get_door_count')
+    @patch('api.garage.meross_service.toggle_door', new_callable=AsyncMock)
+    def test_garage_toggle_post(self, mock_toggle, mock_door_count):
+        mock_door_count.return_value = 2
+        mock_toggle.return_value = {"status": "success", "door": 1}
+
+        response = client.post("/api/garage/1/toggle")
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
+        mock_toggle.assert_awaited_once_with(1)
+
 class TestStatusEndpoint:
 
     @patch('api.status.rinnai_service.get_status', new_callable=AsyncMock)
