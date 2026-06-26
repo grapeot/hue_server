@@ -15,7 +15,7 @@
 | Hue 灯光 | 1 盏，本地 phue API |
 | Wemo 开关 | 4 个，SSDP + pywemo |
 | Rinnai 热水器 | 云端 aiorinnai，支持循环 |
-| Meross 车库门 | 云端 meross-iot |
+| Meross 车库门 | 本地 HTTP `/config`；Meross 账号用于发现设备与获取签名 key |
 
 ## 快速开始
 
@@ -54,14 +54,7 @@ pip install -r requirements.txt
 ./scripts/start-backend.sh
 ```
 
-生产模式：先 `./scripts/build-frontend.sh`，再 `python main.py` 或 PM2 启动，会自动 serve 静态文件。
-
-### PM2 部署
-
-```bash
-pm2 start ecosystem.config.js
-pm2 save
-```
+生产模式：先 `./scripts/build-frontend.sh`，再用你的本地进程管理器运行 `python main.py`，会自动 serve 静态文件。
 
 ## API 概览
 
@@ -72,7 +65,7 @@ pm2 save
 | `GET /api/wemo/{name}/toggle` | Wemo 开关 |
 | `GET /api/rinnai/circulate?duration=5` | 热水器循环 |
 | `GET /api/status?rinnai_refresh=true` | 维护刷新 + 存库 |
-| `GET /api/garage/{n}/toggle` | 车库门 |
+| `GET /api/garage/{n}/toggle` | 车库门；通过 Meross 本地 HTTP 触发 |
 | `GET /api/history?hours=24` | 历史数据 |
 
 ## 脚本
