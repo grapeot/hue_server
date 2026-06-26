@@ -49,6 +49,23 @@ class TestOpenAPI:
         assert "/{full_path}" not in paths
         assert schema["info"]["title"] == "Smart Home Skill"
 
+    @pytest.mark.parametrize("path", [
+        "/api/hue/toggle",
+        "/api/hue/off",
+        "/api/hue/on",
+        "/api/wemo/coffee/toggle",
+        "/api/wemo/coffee/on",
+        "/api/wemo/coffee/off",
+        "/api/rinnai/maintenance",
+        "/api/rinnai/circulate",
+    ])
+    def test_retired_get_mutations_do_not_fall_through_to_spa(self, path):
+        response = client.get(path)
+
+        assert response.status_code == 404
+        assert "text/html" not in response.headers.get("content-type", "")
+        assert response.json()["detail"] == "API route not found"
+
 
 class TestRootEndpoint:
     
