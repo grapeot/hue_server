@@ -33,6 +33,19 @@ class TestOpenAPI:
         assert "/api/garage/{door_index}/toggle" in paths
         assert "post" in paths["/api/garage/{door_index}/toggle"]
         assert "get" not in paths["/api/garage/{door_index}/toggle"]
+        for path in [
+            "/api/hue/off",
+            "/api/hue/on",
+            "/api/hue/on/{brightness}",
+            "/api/hue/toggle",
+            "/api/wemo/{device_name}/toggle",
+            "/api/wemo/{device_name}/on",
+            "/api/wemo/{device_name}/off",
+            "/api/rinnai/maintenance",
+            "/api/rinnai/circulate",
+        ]:
+            assert "post" in paths[path]
+            assert "get" not in paths[path]
         assert "/{full_path}" not in paths
         assert schema["info"]["title"] == "Smart Home Skill"
 
@@ -65,7 +78,7 @@ class TestControlAuth:
         monkeypatch.setenv("SMART_HOME_API_TOKEN", "test-token")
         mock_toggle.return_value = {"status": "success"}
 
-        response = client.get("/api/hue/toggle")
+        response = client.post("/api/hue/toggle")
 
         assert response.status_code == 401
         mock_toggle.assert_not_called()
@@ -75,7 +88,7 @@ class TestControlAuth:
         monkeypatch.setenv("SMART_HOME_API_TOKEN", "test-token")
         mock_toggle.return_value = {"status": "success"}
 
-        response = client.get("/api/hue/toggle", headers={"X-Smart-Home-Token": "test-token"})
+        response = client.post("/api/hue/toggle", headers={"X-Smart-Home-Token": "test-token"})
 
         assert response.status_code == 200
         assert response.json()["status"] == "success"
@@ -95,7 +108,7 @@ class TestHueEndpoints:
     def test_hue_off(self, mock_turn_off):
         mock_turn_off.return_value = {"status": "success", "light": "Baby room"}
         
-        response = client.get("/api/hue/off")
+        response = client.post("/api/hue/off")
         assert response.status_code == 200
         assert response.json()["status"] == "success"
     
@@ -103,11 +116,11 @@ class TestHueEndpoints:
     def test_hue_on(self, mock_turn_on):
         mock_turn_on.return_value = {"status": "success", "light": "Baby room", "brightness": 128}
         
-        response = client.get("/api/hue/on")
+        response = client.post("/api/hue/on")
         assert response.status_code == 200
 
     def test_hue_brightness_validation(self):
-        response = client.get("/api/hue/on/999")
+        response = client.post("/api/hue/on/999")
         assert response.status_code == 422
 
 
@@ -124,7 +137,7 @@ class TestWemoEndpoints:
     def test_wemo_toggle(self, mock_toggle):
         mock_toggle.return_value = {"status": "success", "device": "coffee"}
         
-        response = client.get("/api/wemo/coffee/toggle")
+        response = client.post("/api/wemo/coffee/toggle")
         assert response.status_code == 200
 
 
@@ -148,12 +161,12 @@ class TestRinnaiEndpoints:
     def test_get_rinnai_maintenance(self, mock_maintenance):
         mock_maintenance.return_value = {"status": "success", "is_online": True}
 
-        response = client.get("/api/rinnai/maintenance")
+        response = client.post("/api/rinnai/maintenance")
         assert response.status_code == 200
         assert response.json()["status"] == "success"
 
     def test_rinnai_circulate_duration_validation(self):
-        response = client.get("/api/rinnai/circulate?duration=0")
+        response = client.post("/api/rinnai/circulate?duration=0")
         assert response.status_code == 422
 
 

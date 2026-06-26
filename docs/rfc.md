@@ -41,7 +41,7 @@ The public docs may show example endpoints, but examples are not the contract. O
 
 ## Why Dedicated Endpoints Stay
 
-The project intentionally keeps device actions as dedicated routes such as `POST /api/garage/{door}/toggle` and `GET /api/wemo/{device}/on`.
+The project intentionally keeps device actions as dedicated routes such as `POST /api/garage/{door}/toggle` and `POST /api/wemo/{device}/on`.
 
 This is less abstract than a generic `/api/actions/execute`, but it is better for this domain:
 

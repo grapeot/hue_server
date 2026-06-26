@@ -52,7 +52,7 @@ describe('deviceStore', () => {
     await useDeviceStore.getState().setHueBrightness(200)
 
     expect(mockFetch).toHaveBeenCalledTimes(2)
-    expect(mockFetch).toHaveBeenNthCalledWith(1, '/api/hue/on/200')
+    expect(mockFetch).toHaveBeenNthCalledWith(1, '/api/hue/on/200', { method: 'POST' })
     expect(mockFetch).toHaveBeenNthCalledWith(2, '/api/status?devices=hue')
     
     const status = useDeviceStore.getState().status

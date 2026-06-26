@@ -40,7 +40,7 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
 
   toggleHue: async () => {
     try {
-      const res = await fetch(`${API_BASE}/hue/toggle`);
+      const res = await fetch(`${API_BASE}/hue/toggle`, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.status === 'error') {
         throw new Error(data.message || 'Failed to toggle Hue');
@@ -53,7 +53,7 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
 
   setHueBrightness: async (brightness: number) => {
     try {
-      const res = await fetch(`${API_BASE}/hue/on/${brightness}`);
+      const res = await fetch(`${API_BASE}/hue/on/${brightness}`, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.status === 'error') {
         throw new Error(data.message || 'Failed to set Hue brightness');
@@ -66,7 +66,7 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
 
   toggleWemo: async (name: string) => {
     try {
-      const res = await fetch(`${API_BASE}/wemo/${name}/toggle`);
+      const res = await fetch(`${API_BASE}/wemo/${name}/toggle`, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.status === 'error') {
         throw new Error(data.message || 'Failed to toggle Wemo');
@@ -79,7 +79,7 @@ export const useDeviceStore = create<DeviceStore>((set, get) => ({
 
   circulateRinnai: async (duration = 5) => {
     try {
-      const res = await fetch(`${API_BASE}/rinnai/circulate?duration=${duration}`);
+      const res = await fetch(`${API_BASE}/rinnai/circulate?duration=${duration}`, { method: 'POST' });
       if (!res.ok) throw new Error('Failed to start circulation');
       await get().refreshRinnai();
       setTimeout(() => get().fetchStatus(), 10000);

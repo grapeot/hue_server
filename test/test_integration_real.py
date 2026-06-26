@@ -26,10 +26,10 @@ class TestHueIntegration:
     
     def test_hue_toggle_real(self, client):
         """Test real Hue toggle."""
-        response = client.get("/api/hue/toggle")
+        response = client.post("/api/hue/toggle")
         assert response.status_code == 200
         
-        response2 = client.get("/api/hue/toggle")
+        response2 = client.post("/api/hue/toggle")
         assert response2.status_code == 200
     
     def test_hue_timer_real(self, client):
@@ -56,10 +56,10 @@ class TestWemoIntegration:
     
     def test_wemo_toggle_real(self, client):
         """Test real Wemo toggle."""
-        response = client.get("/api/wemo/coffee/toggle")
+        response = client.post("/api/wemo/coffee/toggle")
         assert response.status_code == 200
         
-        response2 = client.get("/api/wemo/coffee/toggle")
+        response2 = client.post("/api/wemo/coffee/toggle")
         assert response2.status_code == 200
 
 
