@@ -12,7 +12,6 @@ source "${SCRIPT_DIR}/.venv/bin/activate"
 
 # Python load_dotenv() reads .env; do not source it because values may contain spaces.
 export PORT="${PORT:-7999}"
-export SMART_HOME_BIND_HOSTS="${SMART_HOME_BIND_HOSTS:-127.0.0.1,quantum.tail63c3c5.ts.net}"
 
 RESEND_API_KEY_VALUE="$(python - <<'PY'
 from pathlib import Path
