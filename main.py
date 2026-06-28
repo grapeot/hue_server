@@ -33,7 +33,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_TAILSCALE_HOST = "quantum.tail63c3c5.ts.net"
+DEFAULT_TAILSCALE_HOST = os.getenv("SMART_HOME_TAILSCALE_HOST", "localhost")
 
 
 def _split_env_list(value: Optional[str], default: List[str]) -> List[str]:
